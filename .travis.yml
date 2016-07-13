@@ -1,0 +1,24 @@
+language: python
+
+python:
+  - "3.5"
+
+env:
+  - DJANGO_SETTINGS_MODULE=ScheduleApp.settings
+
+install: "pip install -r requirements.txt"
+
+script: python manage.py test
+
+notifications:
+  slack: spbgti:DISw2DtYSQ3gQ8jB9NvTbSYG
+
+deploy:
+  provider: heroku
+  api_key:
+    secure: 4c01be97-e60c-4184-be25-b4c3aa2d2fd4
+  app: spbgti-tools-bot
+  run:
+    - "sh heroku.sh --spbgti-tools-bot"
+  after_deploy:
+    - echo "Running integration tests"
