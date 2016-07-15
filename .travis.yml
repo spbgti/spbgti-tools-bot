@@ -10,6 +10,7 @@ install: "pip install -r requirements.txt"
 
 script: python manage.py test
 
+
 notifications:
   slack: spbgti:DISw2DtYSQ3gQ8jB9NvTbSYG
 
