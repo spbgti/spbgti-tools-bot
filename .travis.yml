@@ -23,4 +23,3 @@ deploy:
     - "sh heroku.sh --app spbgti-tools-bot -staging"
   after_deploy:
     - echo "Running integration tests"
-  skip_cleanup: true
