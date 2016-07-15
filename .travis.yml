@@ -19,6 +19,7 @@ deploy:
     secure: 4c01be97-e60c-4184-be25-b4c3aa2d2fd4
   app: spbgti-tools-bot
   run:
-    - "sh heroku.sh --app spbgti-tools-bot"
+    - "sh heroku.sh --app spbgti-tools-bot -staging"
   after_deploy:
     - echo "Running integration tests"
+  skip_cleanup: true
