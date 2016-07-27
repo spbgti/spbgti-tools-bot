@@ -45,14 +45,14 @@ def newlog(*args):
 
 def handle(msg):
     newlog(str(msg))
-    if 'text' in msg.keys:
-        pass #это текстовое сообщение
+    if 'text' in msg.keys():
+        text_handler(msg) #это текстовое сообщение
     else:
         pass #это какое-то другое сообщение
-    '''
+
+def text_handler(msg):
     if msg["text"] == "/start":
         command_start(msg)
-    '''
 def command_start(msg):
     template_file = open("templates/commandstart.txt", "r")
     TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
