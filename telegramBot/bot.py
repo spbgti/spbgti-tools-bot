@@ -27,7 +27,7 @@ def start():
     if "LOCAL" in os.environ.keys():
         TelegramBot.message_loop(handle)
     else:
-        TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s" % settings.TOKEN)
+        TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
     newlog("старт")
     return True
 
