@@ -8,7 +8,9 @@ from spbgtitoolsbot import settings
 import os
 from django.http import JsonResponse
 import json
+from django.views.decorators.csrf import csrf_exempt
 
+@csrf_exempt
 def webhook(request, token):
     if token != settings.TOKEN:
         newlog("Запрос на запуск бота с неправильным токеном")
@@ -21,14 +23,16 @@ def webhook(request, token):
     else:
         handle(payload)
 
+
 def start():
     global TelegramBot
     TelegramBot = telepot.Bot(settings.TOKEN)
     if "LOCAL" in os.environ.keys():
+        newlog("запускаю longoll")
         TelegramBot.message_loop(handle)
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
-    newlog("старт")
+    newlog("Бот запущен")
     return True
 
 def newlog(*args):
