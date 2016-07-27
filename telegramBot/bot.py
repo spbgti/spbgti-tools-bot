@@ -5,15 +5,30 @@
 from datetime import datetime
 import telepot
 from spbgtitoolsbot import settings
-from django.http import HttpResponse
+import os
+from django.http import JsonResponse
+import json
 
+def webhook(request, token):
+    if token != settings.TOKEN:
+        newlog("Запрос на запуск бота с неправильным токеном")
+        return JsonResponse({}, status=200)
+    msg = request.body.decode('utf-8')
+    try:
+        payload = json.loads(msg)
+    except ValueError:
+        return newlog("Получено неправильное сообщение")
+    else:
+        handle(payload)
 
 def start():
     global TelegramBot
     TelegramBot = telepot.Bot(settings.TOKEN)
+    if os.environ["LOCAL"] == "YES":
+        TelegramBot.message_loop(handle)
+    else:
+        TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s" % settings.TOKEN)
     newlog("старт")
-    TelegramBot.message_loop(handle)
-    #HttpResponse(TelegramBot.getUpdates(), content_type = "application/json")
     return True
 
 def newlog(*args):
@@ -26,10 +41,14 @@ def newlog(*args):
 
 def handle(msg):
     newlog(str(msg))
-    if msg["text"]=="/start":
+    if 'text' in msg.keys:
+        pass #это текстовое сообщение
+    else:
+        pass #это какое-то другое сообщение
+    '''
+    if msg["text"] == "/start":
         command_start(msg)
-
-
+    '''
 def command_start(msg):
     template_file = open("templates/commandstart.txt", "r")
     TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
