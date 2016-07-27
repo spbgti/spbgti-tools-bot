@@ -5,15 +5,17 @@
 from datetime import datetime
 import telepot
 from spbgtitoolsbot import settings
-from django.http import HttpResponse
+import os
 
 
 def start():
     global TelegramBot
     TelegramBot = telepot.Bot(settings.TOKEN)
+    if os.environ["LOCAL"] == "YES":
+        TelegramBot.message_loop(handle)
+    else:
+        TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s" % settings.TOKEN)
     newlog("старт")
-    TelegramBot.message_loop(handle)
-    #HttpResponse(TelegramBot.getUpdates(), content_type = "application/json")
     return True
 
 def newlog(*args):
