@@ -1,4 +1,45 @@
-"""import telebot
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
+from datetime import datetime
+import telepot
+from spbgtitoolsbot import settings
+from django.http import HttpResponse
+
+
+def start():
+    global TelegramBot
+    TelegramBot = telepot.Bot(settings.TOKEN)
+    newlog("старт")
+    TelegramBot.message_loop(handle)
+    #HttpResponse(TelegramBot.getUpdates(), content_type = "application/json")
+    return True
+
+def newlog(*args):
+    filelog = open("telegramBot/log.txt", "a")
+    now=datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S")
+    filelog.write(now+" "+' '.join(args)+"\n")
+    filelog.close()
+    return True
+
+
+def handle(msg):
+    newlog(str(msg))
+    if msg["text"]=="/start":
+        command_start(msg)
+
+
+def command_start(msg):
+    template_file = open("templates/commandstart.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
+    template_file.close()
+
+
+
+
+"""
+import telebot
 token = "TOKEN"
 bot = telebot.TeleBot(token)
 
@@ -80,44 +121,6 @@ while True:
 
 time.sleep(1)
 """
-
-from datetime import datetime
-import telepot
-from spbgtitoolsbot import settings
-from django.http import HttpResponse
-
-
-def start():
-    global TelegramBot
-    TelegramBot = telepot.Bot(settings.TOKEN)
-    newlog("старт")
-    TelegramBot.message_loop(handle)
-    #HttpResponse(TelegramBot.getUpdates(), content_type = "application/json")
-    return True
-
-def newlog(*args):
-    filelog = open("telegramBot/log.txt", "a")
-    now=datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S")
-    filelog.write(now+" "+' '.join(args)+"\n")
-    filelog.close()
-    return True
-
-
-def handle(msg):
-    newlog(str(msg))
-    if msg["text"]=="/start":
-        command_start(msg)
-
-
-def command_start(msg):
-    template_file = open("templates/commandstart.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
-    template_file.close()
-
-
-
-
-
 
 
 
