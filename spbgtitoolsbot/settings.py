@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 print(os.environ.keys())
-TOKEN = os.environ['BOT-TOKEN']
+TOKEN = os.environ['BOT_TOKEN']
 
 # Application definition
 
