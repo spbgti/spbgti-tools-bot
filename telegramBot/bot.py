@@ -127,11 +127,6 @@ def on_callback_query(msg):
     query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
     print('Callback Query:', query_id, from_id, query_data)
 
-"""
-"""import urllib
-import json
-import time
-
     TelegramBot.answerCallbackQuery(query_id, text='Запомнил!')
 
     # telepot.message_identifier(msg)
