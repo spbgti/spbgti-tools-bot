@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from datetime import datetime
 import telepot
 from spbgtitoolsbot import settings
 import os
