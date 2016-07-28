@@ -40,6 +40,7 @@ def start():
     newlog("Бот запущен")
     return True
 
+
 def newlog(*args):
     print(' '.join(args))
     filelog = open("telegramBot/log.txt", "a")
@@ -49,108 +50,48 @@ def newlog(*args):
     return True
 
 
+#def handle(msg):
+#    newlog(str(msg))
+#    if 'text' in msg.keys():
+#        text_handler(msg)  # это текстовое сообщение
+#    else:
+#        pass  # это какое-то другое сообщение
+
 def handle(msg):
     newlog(str(msg))
-    if 'text' in msg.keys():
-        text_handler(msg) #это текстовое сообщение
+    content_type, chat_type, chat_id = telepot.glance(msg)
+    print(content_type, chat_type, chat_id)
+
+    if content_type == 'text':
+        text_handler(msg)  # это текстовое сообщение
+    if content_type == 'sticker':
+        sticker_handler(msg)  # это стикер сообщение
     else:
-        pass #это какое-то другое сообщение
+        pass  # это какое-то другое сообщение
+
 
 def text_handler(msg):
     if msg["text"] == "/start":
         command_start(msg)
+    if msg["text"] == "/info":
+        command_info(msg)
+
+
 def command_start(msg):
     template_file = open("templates/commandstart.txt", "r")
     TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
     template_file.close()
 
 
+def command_info(msg):
+    template_file = open("templates/commandinfo.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
 
 
-"""
-import telebot
-token = "TOKEN"
-bot = telebot.TeleBot(token)
-
-
-@bot.message_handler(commands=["help"])
-def handle_text(message):
-    bot.send_message(message.chat.id, "Мои возможности")
-
-
-@bot.message_handler(content_types=["text"])
-def handle_text(message):
-    if message.text == "a":
-        bot.send_message(message.chat.id, "b")
-    elif message.text == "b":
-        bot.send.message(message.chat.id, "a")
-
-
-
-bot.polling(none_stop=True, interval = 0)
-
-############################################################################################
-
-import requests
-import telebot
-from telebot import types
-from telebot import util
-
-logger = telebot.logger
-CONNECT_TIMEOUT = 3.5
-READ_TIMEOUT = 9999
-def _make_request(token, method_name, method='get', params=None, files=None, base_url=API_URL):
-    """
-
-"""
-    request_url = base_url.format(token, method_name)
-    logger.debug("Request: method={0} url={1} params={2} files={3}".format(method, request_url, params, files))
-    read_timeout = READ_TIMEOUT
-    connect_timeout = CONNECT_TIMEOUT
-    if params:
-        if 'timeout' in params: read_timeout = params['timeout'] + 10
-        if 'connect-timeout' in params: connect_timeout = params['connect-timeout'] + 10
-    result = requests.request(method, request_url, params=params, files=files, timeout=(connect_timeout, read_timeout))
-    logger.debug("The server returned: '{0}'".format(result.text.encode('utf8')))
-    return _check_result(method_name, result)['result']
-
-"""
-"""import urllib
-import json
-import time
-
-API = 'https://api.telegram.org/bot'
-TOKEN = '261615304:AAHn-Vn9FpVkpfJxpx7RE00AYfRIii8v8zk'
-
-URL = API + TOKEN
-INVALID_UPDATE_ID = 0
-
-def getUpdates():
-    get = URL + '/getUpdates'
-    response = urllib.urlopen(get)
-    return response.read()
-
-def getCommand():
-    js = json.loads(getUpdates())
-
-    update_obj = js['result'][-1]
-
-    global last_update_id
-    if last_update_id == INVALID_UPDATE_ID:
-        last_update_id = update_obj['update_id']
-        return None
-
-    if update_obj['update_id'] != last_update_id:
-        last_update_id = update_obj['update_id']
-        return update_obj['message']['text']
-    return None
-
-while True:
-    command = getCommand()
-
-time.sleep(1)
-"""
-
-
+def sticker_handler(msg):
+    template_file = open("templates/sticker.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
 
 
