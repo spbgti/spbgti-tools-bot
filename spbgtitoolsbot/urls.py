@@ -16,7 +16,6 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-
 urlpatterns = [
     #command('start', StartView.as_command_view()),
     url(r'^telegramBot/', include('telegramBot.urls')),

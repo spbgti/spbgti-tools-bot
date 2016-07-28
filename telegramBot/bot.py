@@ -74,6 +74,8 @@ def handle(msg):
 def text_handler(msg):
     if msg["text"] == "/start":
         command_start(msg)
+    if msg["text"] == "/info":
+        command_info(msg)
 
 
 def command_start(msg):
@@ -124,6 +126,11 @@ def on_chat_message(msg):  # для 2 (callback_query)
 def on_callback_query(msg):
     query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
     print('Callback Query:', query_id, from_id, query_data)
+
+"""
+"""import urllib
+import json
+import time
 
     TelegramBot.answerCallbackQuery(query_id, text='Запомнил!')
 
