@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 TOKEN = os.environ['BOT-TOKEN']
-
+print(os.environ.keys())
 # Application definition
 
 INSTALLED_APPS = [
