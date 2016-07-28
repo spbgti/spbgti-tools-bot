@@ -17,6 +17,8 @@ def webhook(request, token):
         newlog("Запрос на запуск бота с неправильным токеном")
         return HttpResponseForbidden('Invalid token')
     msg = request.body.decode('utf-8')
+    newlog("Получено сообщение")
+    print(msg)
     try:
         payload = json.loads(msg)
     except ValueError:
@@ -39,6 +41,7 @@ def start():
     return True
 
 def newlog(*args):
+    print(' '.join(args))
     filelog = open("telegramBot/log.txt", "a")
     now=datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S")
     filelog.write(now+" "+' '.join(args)+"\n")
