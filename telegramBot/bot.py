@@ -6,22 +6,25 @@ from datetime import datetime
 import telepot
 from spbgtitoolsbot import settings
 import os
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 import json
 from django.views.decorators.csrf import csrf_exempt
+
 
 @csrf_exempt
 def webhook(request, token):
     if token != settings.TOKEN:
         newlog("Запрос на запуск бота с неправильным токеном")
-        return JsonResponse({}, status=200)
+        return HttpResponseForbidden('Invalid token')
     msg = request.body.decode('utf-8')
     try:
         payload = json.loads(msg)
     except ValueError:
-        return newlog("Получено неправильное сообщение")
+        newlog("Получено неправильное сообщение")
+        return HttpResponseBadRequest('Invalid request body')
     else:
         handle(payload)
+        return JsonResponse({}, status=200)
 
 
 def start():

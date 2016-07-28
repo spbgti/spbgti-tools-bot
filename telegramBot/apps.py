@@ -7,4 +7,4 @@ class TelegrambotConfig(AppConfig):
 
     def ready(self):
         from . import bot
-        bot.start()
+        print(bot.start())
