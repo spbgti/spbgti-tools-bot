@@ -56,16 +56,15 @@ def newlog(*args):
 
 def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
-    print(content_type, chat_type, chat_id)
     logger.info("Message processing:")
     logger.info(content_type + ' by ' + str(msg['from']['id']))
     if content_type == 'text':
         text_handler(msg)  # это текстовое сообщение
-    if content_type == 'sticker':
+    elif content_type == 'sticker':
         sticker_handler(msg)  # это стикер сообщение
-    if content_type == 'document':
+    elif content_type == 'document':
         document_handler(msg)  # это документ сообщение
-    if content_type == 'location':
+    elif content_type == 'location':
         location_handler(msg)  #это информация о местоположении
     else:
         other_handler(msg)  # это какое-то другое сообщение
