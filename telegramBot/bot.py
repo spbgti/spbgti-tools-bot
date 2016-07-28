@@ -9,6 +9,7 @@ import os
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 import json
 from django.views.decorators.csrf import csrf_exempt
+from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 @csrf_exempt
@@ -34,7 +35,8 @@ def start():
     if 'LOCAL' in os.environ.keys() and os.environ['LOCAL'] == 'YES':
         newlog("запускаю longpoll")
         TelegramBot.setWebhook() # disable webhook
-        TelegramBot.message_loop(handle)
+        #TelegramBot.message_loop(handle) #1
+        TelegramBot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query}) #2
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
     newlog("Бот запущен")
@@ -45,17 +47,11 @@ def newlog(*args):
     print(' '.join(args))
     filelog = open("telegramBot/log.txt", "a")
     now=datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S")
-    filelog.write(now+" "+' '.join(args)+"\n")
+    filelog.write(now+" "+' '.join(args)+"\n\n")
+    #filelog.write(now + " " + "Message - "+ " " + ' '.join(args) + "\n\n")  # сделать логи красивыми
     filelog.close()
     return True
 
-
-#def handle(msg):
-#    newlog(str(msg))
-#    if 'text' in msg.keys():
-#        text_handler(msg)  # это текстовое сообщение
-#    else:
-#        pass  # это какое-то другое сообщение
 
 def handle(msg):
     newlog(str(msg))
@@ -66,8 +62,12 @@ def handle(msg):
         text_handler(msg)  # это текстовое сообщение
     if content_type == 'sticker':
         sticker_handler(msg)  # это стикер сообщение
+    if content_type == 'document':
+        document_handler(msg)  # это документ сообщение
+    if content_type == 'location':
+        location_handler(msg)  #это информация о местоположении
     else:
-        pass  # это какое-то другое сообщение
+        other_handler(msg)  # это какое-то другое сообщение
 
 
 def text_handler(msg):
@@ -89,9 +89,49 @@ def command_info(msg):
     template_file.close()
 
 
+def document_handler(msg):
+    template_file = open("templates/document.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
+
+
 def sticker_handler(msg):
     template_file = open("templates/sticker.txt", "r")
     TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
     template_file.close()
+
+
+def location_handler(msg):
+    template_file = open("templates/location.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
+
+
+def other_handler(msg):
+    template_file = open("templates/other.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
+
+
+def on_chat_message(msg):  # для 2 (callback_query)
+    content_type, chat_type, chat_id = telepot.glance(msg)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                   [InlineKeyboardButton(text='Press me', callback_data='press')],
+               ])
+
+    TelegramBot.sendMessage(chat_id, 'Use inline keyboard', reply_markup=keyboard)
+
+
+def on_callback_query(msg):
+    query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
+    print('Callback Query:', query_id, from_id, query_data)
+
+    TelegramBot.answerCallbackQuery(query_id, text='Запомнил!')
+
+    # telepot.message_identifier(msg)
+    # TelegramBot.editMessageText("я поменялся")
+
+
 
 
