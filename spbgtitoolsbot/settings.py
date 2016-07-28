@@ -26,7 +26,8 @@ SECRET_KEY = '5=#uov4wqeb@%e2wkv+203eso%xw$n+6mw1zg7&78orudxj8^t'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-TOKEN = '261615304:AAHn-Vn9FpVkpfJxpx7RE00AYfRIii8v8zk'
+print(os.environ.keys())
+TOKEN = os.environ['BOT_TOKEN']
 
 # Application definition
 
@@ -122,7 +123,33 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 STATIC_URL = '/static/'
 
-# Extra places for collectstatic to find static files.
-"""STATICFILES_DIRS = (
-    os.path.join(PROJECT_ROOT, 'staticfiles'),
-)"""
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format' : '%(asctime)s %(levelname)-8s %(name)-15s: %(message)s',
+            'datefmt' : "%d.%m.%Y %H:%M:%S",
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'NOTSET',
+            'class': 'logging.FileHandler',
+            'filename': 'telegramBot/log.txt',
+            'formatter': 'default',
+        },
+        'console': {
+            'level': 'NOTSET',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+    },
+    'loggers': {
+        'telegramBot': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
