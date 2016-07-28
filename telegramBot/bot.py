@@ -18,22 +18,22 @@ def webhook(request, token):
         return HttpResponseForbidden('Invalid token')
     msg = request.body.decode('utf-8')
     newlog("Получено сообщение")
-    print(msg)
     try:
         payload = json.loads(msg)
     except ValueError:
         newlog("Получено неправильное сообщение")
         return HttpResponseBadRequest('Invalid request body')
     else:
-        handle(payload)
+        handle(payload['message'])
         return JsonResponse({}, status=200)
 
 
 def start():
     global TelegramBot
     TelegramBot = telepot.Bot(settings.TOKEN)
-    if "LOCAL" in os.environ.keys():
-        newlog("запускаю longoll")
+    if 'LOCAL' in os.environ.keys() and os.environ['LOCAL'] == 'YES':
+        newlog("запускаю longpoll")
+        TelegramBot.setWebhook() # disable webhook
         TelegramBot.message_loop(handle)
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
