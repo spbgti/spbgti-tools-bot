@@ -9,6 +9,7 @@ import os
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 import json
 from django.views.decorators.csrf import csrf_exempt
+from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 @csrf_exempt
@@ -34,122 +35,102 @@ def start():
     if 'LOCAL' in os.environ.keys() and os.environ['LOCAL'] == 'YES':
         newlog("запускаю longpoll")
         TelegramBot.setWebhook() # disable webhook
-        TelegramBot.message_loop(handle)
+        #TelegramBot.message_loop(handle) #1
+        TelegramBot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query}) #2
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
     newlog("Бот запущен")
     return True
 
+
 def newlog(*args):
     print(' '.join(args))
     filelog = open("telegramBot/log.txt", "a")
     now=datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S")
-    filelog.write(now+" "+' '.join(args)+"\n")
+    filelog.write(now+" "+' '.join(args)+"\n\n")
+    #filelog.write(now + " " + "Message - "+ " " + ' '.join(args) + "\n\n")  # сделать логи красивыми
     filelog.close()
     return True
 
 
 def handle(msg):
     newlog(str(msg))
-    if 'text' in msg.keys():
-        text_handler(msg) #это текстовое сообщение
+    content_type, chat_type, chat_id = telepot.glance(msg)
+    print(content_type, chat_type, chat_id)
+
+    if content_type == 'text':
+        text_handler(msg)  # это текстовое сообщение
+    elif content_type == 'sticker':
+        sticker_handler(msg)
+    elif content_type == 'document':
+        document_handler(msg)
+    elif content_type == 'location':
+        location_handler(msg)
     else:
-        pass #это какое-то другое сообщение
+        other_handler(msg)
+
 
 def text_handler(msg):
     if msg["text"] == "/start":
         command_start(msg)
+    if msg["text"] == "/info":
+        command_info(msg)
+
+
 def command_start(msg):
     template_file = open("templates/commandstart.txt", "r")
     TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
     template_file.close()
 
 
+def command_info(msg):
+    template_file = open("templates/commandinfo.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
 
 
-"""
-import telebot
-token = "TOKEN"
-bot = telebot.TeleBot(token)
+def document_handler(msg):
+    template_file = open("templates/document.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
 
 
-@bot.message_handler(commands=["help"])
-def handle_text(message):
-    bot.send_message(message.chat.id, "Мои возможности")
+def sticker_handler(msg):
+    template_file = open("templates/sticker.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
 
 
-@bot.message_handler(content_types=["text"])
-def handle_text(message):
-    if message.text == "a":
-        bot.send_message(message.chat.id, "b")
-    elif message.text == "b":
-        bot.send.message(message.chat.id, "a")
+def location_handler(msg):
+    template_file = open("templates/location.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
 
 
+def other_handler(msg):
+    template_file = open("templates/other.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+    template_file.close()
 
-bot.polling(none_stop=True, interval = 0)
 
-############################################################################################
+def on_chat_message(msg):  # для 2 (callback_query)
+    content_type, chat_type, chat_id = telepot.glance(msg)
 
-import requests
-import telebot
-from telebot import types
-from telebot import util
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                   [InlineKeyboardButton(text='Press me', callback_data='press')],
+               ])
 
-logger = telebot.logger
-CONNECT_TIMEOUT = 3.5
-READ_TIMEOUT = 9999
-def _make_request(token, method_name, method='get', params=None, files=None, base_url=API_URL):
-    """
+    TelegramBot.sendMessage(chat_id, 'Use inline keyboard', reply_markup=keyboard)
 
-"""
-    request_url = base_url.format(token, method_name)
-    logger.debug("Request: method={0} url={1} params={2} files={3}".format(method, request_url, params, files))
-    read_timeout = READ_TIMEOUT
-    connect_timeout = CONNECT_TIMEOUT
-    if params:
-        if 'timeout' in params: read_timeout = params['timeout'] + 10
-        if 'connect-timeout' in params: connect_timeout = params['connect-timeout'] + 10
-    result = requests.request(method, request_url, params=params, files=files, timeout=(connect_timeout, read_timeout))
-    logger.debug("The server returned: '{0}'".format(result.text.encode('utf8')))
-    return _check_result(method_name, result)['result']
 
-"""
-"""import urllib
-import json
-import time
+def on_callback_query(msg):
+    query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
+    print('Callback Query:', query_id, from_id, query_data)
 
-API = 'https://api.telegram.org/bot'
-TOKEN = '261615304:AAHn-Vn9FpVkpfJxpx7RE00AYfRIii8v8zk'
+    TelegramBot.answerCallbackQuery(query_id, text='Запомнил!')
 
-URL = API + TOKEN
-INVALID_UPDATE_ID = 0
-
-def getUpdates():
-    get = URL + '/getUpdates'
-    response = urllib.urlopen(get)
-    return response.read()
-
-def getCommand():
-    js = json.loads(getUpdates())
-
-    update_obj = js['result'][-1]
-
-    global last_update_id
-    if last_update_id == INVALID_UPDATE_ID:
-        last_update_id = update_obj['update_id']
-        return None
-
-    if update_obj['update_id'] != last_update_id:
-        last_update_id = update_obj['update_id']
-        return update_obj['message']['text']
-    return None
-
-while True:
-    command = getCommand()
-
-time.sleep(1)
-"""
+    # telepot.message_identifier(msg)
+    # TelegramBot.editMessageText("я поменялся")
 
 
 
