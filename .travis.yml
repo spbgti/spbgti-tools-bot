@@ -1,24 +1,21 @@
 language: python
-
 python:
-  - "3.5"
-
+- '3.5'
 env:
+  matrix:
   - DJANGO_SETTINGS_MODULE=spbgtitoolsbot.settings
-
-install: "pip install -r requirements.txt"
-
+  global:
+    secure: ew0y373xGHtiisez6wXfwEZIRJAdPc8ltN4PIIj5qwbLjQ8JnGhsMYUAdRM6Y/xVMuk5Q1yrrO+XniIVIPxpQ9ulOgJUXUKVDNmFmb649+iSxwdMifHM8dDvAQzEdnJ+7YXJ4EAsc64aPVLWVLo/DtDl1R2QYGir/I63rencFBNJluwo5C5nsfnk065CKCnIbboR0pm1UX6M4IK442CxyR/a2q58jymKbb4qzIRTYc1wrP6GF4OuUJESxyY5umf8M9122GUK+t7vdrirKhUwCffoyvKhUJlnOlPB40paFDRW+Hyxyv6vsWN1S+CZW3v8d3e0sFQTOxJatLmPPNYpE/TYwYhnblRXDHY3Sa5ojxQgVAWxFkodw0quj97Ao1ViVmIzCydcagASxVJn9FfvFxhP6sp5sze8lq/opMo0LvHgNzkLGFRt6DV091iiMP61LtEv1dqbHf3IulRCWQYeSOItGKhwZbHzAUs2E/R8p6ox+6zEw/uHdH/DXx1+uGJ8Xp1ozW9YfIRg39eUEc5sa1PIUd8aWlgXfLQYnD6d1hkWhwypfOTBx+deIgqKzwr3M/gkKWNfN91buHR1vImAulGmvCOrsYmiPHmp2aU6hpdPadaWRyZ9zqscYqpf8fHSxnVvAQAPnRIhLYLIsPyBJR/u9YJMHP0aiTP9kzyGZgM=
+install: pip install -r requirements.txt
 script: python manage.py test
-
 notifications:
   slack: spbgti:DISw2DtYSQ3gQ8jB9NvTbSYG
-
 deploy:
   provider: heroku
   api_key:
     secure: 4c01be97-e60c-4184-be25-b4c3aa2d2fd4
   app: spbgti-tools-bot
   run:
-    - "sh heroku.sh --app spbgti-tools-bot -staging"
+  - sh heroku.sh --app spbgti-tools-bot -staging
   after_deploy:
-    - echo "Running integration tests"
+  - echo "Running integration tests"
