@@ -9,6 +9,11 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 import logging
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
+from telepot.namedtuple import InlineQueryResultArticle, InputTextMessageContent
+from telepot.delegate import per_chat_id, create_open
+import sys
+import re
+import random
 
 logger = logging.getLogger("telegramBot")
 
@@ -38,6 +43,9 @@ def start():
         newlog("запускаю longpoll")
         TelegramBot.setWebhook() # disable webhook
         TelegramBot.message_loop(handle) #1
+        #TelegramBot.message_loop({'inline_query': on_inline_query,
+         #                 'chosen_inline_result': on_chosen_inline_result},
+         #                       )
         #TelegramBot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query}) #2
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
@@ -58,14 +66,15 @@ def handle(msg):
     logger.info(content_type + ' by ' + str(msg['from']['id']))
     if content_type == 'text':
         text_handler(msg)  # это текстовое сообщение
+        re_text(msg)
     elif content_type == 'sticker':
-        sticker_handler(msg)  # это стикер сообщение
+        sticker_handler(msg)
     elif content_type == 'document':
-        document_handler(msg)  # это документ сообщение
+        document_handler(msg)
     elif content_type == 'location':
-        location_handler(msg)  #это информация о местоположении
+        location_handler(msg)
     else:
-        other_handler(msg)  # это какое-то другое сообщение
+        other_handler(msg)
 
 
 def text_handler(msg):
@@ -111,6 +120,16 @@ def other_handler(msg):
     template_file.close()
 
 
+def re_text(msg):
+    result = re.findall("спасиб", str(msg))
+    if result:
+        template_file = (open("templates/thanks_answers.txt", "r").read().splitlines())
+        line = random.choice(template_file)
+        TelegramBot.sendMessage(msg["chat"]["id"], line)
+        template_file.close()
+
+
+
 def on_chat_message(msg):  # для 2 (callback_query)
     content_type, chat_type, chat_id = telepot.glance(msg)
 
@@ -118,16 +137,15 @@ def on_chat_message(msg):  # для 2 (callback_query)
                    [InlineKeyboardButton(text='Press me', callback_data='press')],
                ])
 
-    TelegramBot.sendMessage(chat_id, 'Use inline keyboard', reply_markup=keyboard)
+    TelegramBot.editMessageText(chat_id, 'Use inline keyboard', reply_markup=keyboard)
+
 
 def on_callback_query(msg):
     query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
     print('Callback Query:', query_id, from_id, query_data)
 
-    TelegramBot.answerCallbackQuery(query_id, text='Запомнил!')
+    TelegramBot.answerCallbackQuery(query_id, text='Got it!')
 
-    # telepot.message_identifier(msg)
-    # TelegramBot.editMessageText("я поменялся")
 
 
 
