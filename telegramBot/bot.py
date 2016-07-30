@@ -1,28 +1,38 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from datetime import datetime
 import telepot
 from spbgtitoolsbot import settings
 import os
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 import json
 from django.views.decorators.csrf import csrf_exempt
+import logging
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
+from telepot.namedtuple import InlineQueryResultArticle, InputTextMessageContent
+from telepot.delegate import per_chat_id, create_open
+from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton
+import sys
+import re
+import random
 
+logger = logging.getLogger("telegramBot")
+
+TelegramBot = telepot.Bot(settings.TOKEN)
 
 @csrf_exempt
 def webhook(request, token):
     if token != settings.TOKEN:
-        newlog("Запрос на запуск бота с неправильным токеном")
+        logger.warning("Invalide token")
         return HttpResponseForbidden('Invalid token')
     msg = request.body.decode('utf-8')
-    newlog("Получено сообщение")
+    logger.info("Message received from webhook:")
+    logger.info(msg)
+    logger.info("from " + request.META.REMOTE_ADDR + " " + request.META.REMOTE_HOST)
     try:
         payload = json.loads(msg)
     except ValueError:
-        newlog("Получено неправильное сообщение")
+        logger.warning("Invalid request body")
         return HttpResponseBadRequest('Invalid request body')
     else:
         handle(payload['message'])
@@ -30,13 +40,10 @@ def webhook(request, token):
 
 
 def start():
-    global TelegramBot
-    TelegramBot = telepot.Bot(settings.TOKEN)
     if 'LOCAL' in os.environ.keys() and os.environ['LOCAL'] == 'YES':
         newlog("запускаю longpoll")
         TelegramBot.setWebhook() # disable webhook
-        #TelegramBot.message_loop(handle) #1
-        TelegramBot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query}) #2
+        TelegramBot.message_loop(handle)
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
     newlog("Бот запущен")
@@ -44,30 +51,27 @@ def start():
 
 
 def newlog(*args):
-    print(' '.join(args))
-    filelog = open("telegramBot/log.txt", "a")
-    now=datetime.strftime(datetime.now(), "%d.%m.%Y %H:%M:%S")
-    filelog.write(now+" "+' '.join(args)+"\n\n")
-    #filelog.write(now + " " + "Message - "+ " " + ' '.join(args) + "\n\n")  # сделать логи красивыми
-    filelog.close()
+    for arg in args:
+        logger.info(arg)
+
     return True
 
 
 def handle(msg):
-    newlog(str(msg))
     content_type, chat_type, chat_id = telepot.glance(msg)
-    print(content_type, chat_type, chat_id)
-
+    logger.info("Message processing:")
+    logger.info(content_type + ' by ' + str(msg['from']['id']))
     if content_type == 'text':
         text_handler(msg)  # это текстовое сообщение
-    if content_type == 'sticker':
-        sticker_handler(msg)  # это стикер сообщение
-    if content_type == 'document':
-        document_handler(msg)  # это документ сообщение
-    if content_type == 'location':
-        location_handler(msg)  #это информация о местоположении
+        re_text(msg)
+    elif content_type == 'sticker':
+        sticker_handler(msg)
+    elif content_type == 'document':
+        document_handler(msg)
+    elif content_type == 'location':
+        location_handler(msg)
     else:
-        other_handler(msg)  # это какое-то другое сообщение
+        other_handler(msg)
 
 
 def text_handler(msg):
@@ -80,6 +84,7 @@ def text_handler(msg):
 def command_start(msg):
     template_file = open("templates/commandstart.txt", "r")
     TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
+    registration(msg)
     template_file.close()
 
 
@@ -113,24 +118,120 @@ def other_handler(msg):
     template_file.close()
 
 
-def on_chat_message(msg):  # для 2 (callback_query)
-    content_type, chat_type, chat_id = telepot.glance(msg)
+def re_text(msg):
+    result = re.findall("спасиб", str(msg))
+    if result:
+        template_file = (open("templates/thanks_answers.txt", "r").read().splitlines())
+        line = random.choice(template_file)
+        TelegramBot.sendMessage(msg["chat"]["id"], line)
+      
+chat_flavors = ['chat', 'edited_chat']
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                   [InlineKeyboardButton(text='Press me', callback_data='press')],
-               ])
 
-    TelegramBot.sendMessage(chat_id, 'Use inline keyboard', reply_markup=keyboard)
+def registration(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Регистрация. Я ...',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="Студент"), KeyboardButton(text="Магистрант"), KeyboardButton(text="СПО")]
+                                ], resize_keyboard=True
+                            ))
 
 
-def on_callback_query(msg):
-    query_id, from_id, query_data = telepot.glance(msg, flavor='callback_query')
-    print('Callback Query:', query_id, from_id, query_data)
+# если студент (бакалавриат, потом учесть специалитет и очное, заочное)
+def registration_set_faculty(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери факультет',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="1 ф"),
+                                     KeyboardButton(text="2 ф"),
+                                     KeyboardButton(text="3 ф"),
+                                     KeyboardButton(text="4 ф"),
+                                     KeyboardButton(text="5 ф"),
+                                     KeyboardButton(text="6 ф"),
+                                     ]
+                                ], resize_keyboard=True
+                            ))
 
-    TelegramBot.answerCallbackQuery(query_id, text='Запомнил!')
 
-    # telepot.message_identifier(msg)
-    # TelegramBot.editMessageText("я поменялся")
+def registration_set_stage(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери уровень образования',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="Бакалавриат"), KeyboardButton(text="Специалитет"),]
+                                ], resize_keyboard=True
+                            ))
+
+
+
+def registration_set_year_student(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери год поступления',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="2016"),
+                                     KeyboardButton(text="2015"),
+                                     KeyboardButton(text="2014"),
+                                     KeyboardButton(text="2013"),
+                                     KeyboardButton(text="2012"),
+                                     ]
+                                ], resize_keyboard=True
+                            ))
+
+def registration_set_group_student(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери группу',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="1"),
+                                     KeyboardButton(text="2"),
+                                     KeyboardButton(text="3"),
+                                     KeyboardButton(text="4"),
+                                     KeyboardButton(text="5"),
+                                     KeyboardButton(text="6"),
+                                     ]
+                                ], resize_keyboard=True
+                            ))
+
+
+# если магистрант
+def registration_set_faculty_undergraduate(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери год поступления',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="2012"),
+                                     KeyboardButton(text="2011"),
+                                     ]
+                                ], resize_keyboard=True
+                            ))
+
+# СПО оставим пока
+# запомнили номер группы
+# переходим в меню
+
+
+def menu(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Меню',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="Информация"),
+                                     KeyboardButton(text="Расписание"),
+                                     ]
+                                ], resize_keyboard=True
+                            ))
+
+
+def schedule_students(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Меню',
+                            reply_markup=ReplyKeyboardMarkup(
+                                keyboard=[
+                                    [KeyboardButton(text="Сегодня"), KeyboardButton(text="Завтра"),
+                                     KeyboardButton(text="Эта неделя"), KeyboardButton(text="Всё расписание"),
+                                     ]
+                                ], resize_keyboard=True
+                            ))
+
+
+
+
+
 
 
 
