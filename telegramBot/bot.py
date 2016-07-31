@@ -27,7 +27,7 @@ def webhook(request, token):
     msg = request.body.decode('utf-8')
     logger.info("Message received from webhook:")
     logger.info(msg)
-    logger.info("from " + request.META.get('REMOTE_ADDR', default=None))
+    logger.info("from " + request.META.get('REMOTE_ADDR', None))
     try:
         payload = json.loads(msg)
     except ValueError:
