@@ -21,6 +21,7 @@ logger = logging.getLogger("telegramBot")
 
 TelegramBot = telepot.Bot(settings.TOKEN)
 
+
 @csrf_exempt
 def webhook(request, token):
     if token != settings.TOKEN:
@@ -63,8 +64,21 @@ def handle(msg):
     logger.info("Message processing:")
     logger.info(content_type + ' by ' + str(msg['from']['id']))
     if content_type == 'text':
-        text_handler(msg)  # это текстовое сообщение
-        re_text(msg)
+        if content_type == 'text':
+            text_handler(msg)  # это текстовое сообщение
+            re_text(msg)
+            if msg['text'] in answer['registration']:
+                temp_set_state(msg, registration_set_group)
+                registration_set_group(msg)
+            if msg['text'] in answer_menu['menu']:
+                if msg['text'] == 'Информация':
+                    information(msg)
+                    temp_set_state(msg, information)
+
+                elif msg['text'] == 'Расписание':
+                    schedule_students(msg)
+                    temp_set_state(msg, schedule_students)
+
     elif content_type == 'sticker':
         sticker_handler(msg)
     elif content_type == 'document':
@@ -102,10 +116,9 @@ def temp_set_state(msg, state):
 
 
 def command_start(msg):
-    registration(msg)
     template_file = open("templates/commandstart.txt", "r")
     TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
-
+    registration(msg)
     template_file.close()
 
 
@@ -147,99 +160,58 @@ def re_text(msg):
         TelegramBot.sendMessage(msg["chat"]["id"], line)
 
 
+answer = {}
+answer['registration'] = ['Студент', 'Абитуриент']
+answer_menu = {}
+answer_menu['menu'] = ['Информация', 'Расписание']
+schedule_day = {}
+schedule_day['schedule_students'] = ['Сегодня', 'Завтра', 'Эта неделя', 'Всё расписание']
+
+
 def registration(msg):
-    temp_set_state(msg,registration_set_faculty)
     TelegramBot.sendMessage(msg["chat"]["id"], 'Регистрация. Я ...',
                             reply_markup=ReplyKeyboardMarkup(
                                 keyboard=[
-                                    [KeyboardButton(text="Студент"), KeyboardButton(text="Магистрант"), KeyboardButton(text="СПО")]
-                                ], resize_keyboard=True
+                                    [KeyboardButton(text="Студент"),
+                                     KeyboardButton(text="Абитуриент")]
+                                ], resize_keyboard=True, one_time_keyboard=True
                             ))
 
 
-# если студент (бакалавриат, потом учесть специалитет и очное, заочное)
-def registration_set_faculty(msg):
-    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери факультет',
-                            reply_markup=ReplyKeyboardMarkup(
-                                keyboard=[
-                                    [KeyboardButton(text="1 ф"),
-                                     KeyboardButton(text="2 ф"),
-                                     KeyboardButton(text="3 ф"),
-                                     KeyboardButton(text="4 ф"),
-                                     KeyboardButton(text="5 ф"),
-                                     KeyboardButton(text="6 ф"),
-                                     ]
-                                ], resize_keyboard=True
-                            ))
+def registration_set_group(msg):
+    if msg['text'] in answer['registration']:
 
-
-def registration_set_stage(msg):
-    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери уровень образования',
-                            reply_markup=ReplyKeyboardMarkup(
-                                keyboard=[
-                                    [KeyboardButton(text="Бакалавриат"), KeyboardButton(text="Специалитет"),]
-                                ], resize_keyboard=True
-                            ))
-
-
-
-def registration_set_year_student(msg):
-    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери год поступления',
-                            reply_markup=ReplyKeyboardMarkup(
-                                keyboard=[
-                                    [KeyboardButton(text="2016"),
-                                     KeyboardButton(text="2015"),
-                                     KeyboardButton(text="2014"),
-                                     KeyboardButton(text="2013"),
-                                     KeyboardButton(text="2012"),
-                                     ]
-                                ], resize_keyboard=True
-                            ))
-
-def registration_set_group_student(msg):
-    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери группу',
-                            reply_markup=ReplyKeyboardMarkup(
-                                keyboard=[
-                                    [KeyboardButton(text="1"),
-                                     KeyboardButton(text="2"),
-                                     KeyboardButton(text="3"),
-                                     KeyboardButton(text="4"),
-                                     KeyboardButton(text="5"),
-                                     KeyboardButton(text="6"),
-                                     ]
-                                ], resize_keyboard=True
-                            ))
-
-
-# если магистрант
-def registration_set_faculty_undergraduate(msg):
-    TelegramBot.sendMessage(msg["chat"]["id"], 'Выбери год поступления',
-                            reply_markup=ReplyKeyboardMarkup(
-                                keyboard=[
-                                    [KeyboardButton(text="2012"),
-                                     KeyboardButton(text="2011"),
-                                     ]
-                                ], resize_keyboard=True
-                            ))
-
-# СПО оставим пока
-# запомнили номер группы
-# переходим в меню
+       menu(msg)
+       temp_set_state(msg, menu)
+        # заносим ответ в базу данных
+        # обработать студента и абитуриента
+    else:
+        pass
+        TelegramBot.sendMessage(msg["chat"]["id"], 'Попробуй еще раз', )
+        registration(msg)
 
 
 def menu(msg):
-    TelegramBot.sendMessage(msg["chat"]["id"], 'Меню',
+    TelegramBot.sendMessage(msg["chat"]["id"], "Меню",
                             reply_markup=ReplyKeyboardMarkup(
                                 keyboard=[
                                     [KeyboardButton(text="Информация"),
                                      KeyboardButton(text="Расписание"),
                                      ]
-                                ], resize_keyboard=True
+                                ], resize_keyboard=True, one_time_keyboard=True
                             ))
+    if temp_set_state == "menu" and msg['text'] in answer_menu['menu']:   # if temp_set_state ="menu" and msg['text'] in answer_menu['menu']:
+        if msg['text'] == 'Информация':
+            information(msg)
+            temp_set_state(msg, information)
+
+        elif msg['text'] == 'Расписание':
+            schedule_students(msg)
+            temp_set_state(msg, schedule_students)
 
 
 def schedule_students(msg):
-    TelegramBot.sendMessage(msg["chat"]["id"], 'Меню',
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Расписание',
                             reply_markup=ReplyKeyboardMarkup(
                                 keyboard=[
                                     [KeyboardButton(text="Сегодня"), KeyboardButton(text="Завтра"),
@@ -248,6 +220,10 @@ def schedule_students(msg):
                                 ], resize_keyboard=True
                             ))
 
+
+def information(msg):
+    TelegramBot.sendMessage(msg["chat"]["id"], 'Информация о боте')
+    # дописать
 
 
 
