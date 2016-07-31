@@ -26,6 +26,7 @@ SECRET_KEY = '5=#uov4wqeb@%e2wkv+203eso%xw$n+6mw1zg7&78orudxj8^t'
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
 TOKEN = os.environ['BOT_TOKEN']
 
 # Application definition
@@ -128,7 +129,7 @@ LOGGING = {
     'formatters': {
         'default': {
             'format' : '%(asctime)s %(levelname)-8s %(name)-15s: %(message)s',
-            'datefmt' : "[%d.%m.%Y %H:%M:%S]",
+            'datefmt' : "%d.%m.%Y %H:%M:%S",
         },
     },
     'handlers': {
