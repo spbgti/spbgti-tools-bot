@@ -128,7 +128,7 @@ LOGGING = {
     'formatters': {
         'default': {
             'format' : '%(asctime)s %(levelname)-8s %(name)-15s: %(message)s',
-            'datefmt' : "%d.%m.%Y %H:%M:%S",
+            'datefmt' : "[%d.%m.%Y %H:%M:%S]",
         },
     },
     'handlers': {
