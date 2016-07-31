@@ -15,6 +15,7 @@ from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton
 import sys
 import re
 import random
+import json
 
 logger = logging.getLogger("telegramBot")
 
@@ -77,14 +78,32 @@ def handle(msg):
 def text_handler(msg):
     if msg["text"] == "/start":
         command_start(msg)
-    if msg["text"] == "/info":
+    elif msg["text"] == "/info":
         command_info(msg)
+    else:
+        eval(temp_get_state(msg))(msg)
+
+def temp_get_state(msg):
+    with open('telegramBot/temp.json', 'r') as f:
+        data = json.loads(f.read())
+    if not msg["from"]["id"] in data['data']:
+        data['data'][msg["from"]["id"]] = "registration"
+    return data['data'][msg['from']['id']]
+
+def temp_set_state(msg, state):
+    with open('telegramBot/temp.json', 'r') as f:
+        data = json.loads(f.read())
+    print(data)
+    data['data'][msg["from"]["id"]] = state
+    with open('telegramBot/temp.json', 'w') as f:
+        f.write(json.dumps(data))
 
 
 def command_start(msg):
-    template_file = open("templates/commandstart.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
     registration(msg)
+    template_file = open("templates/commandstart.txt", "r")
+    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
+
     template_file.close()
 
 
@@ -129,6 +148,7 @@ chat_flavors = ['chat', 'edited_chat']
 
 
 def registration(msg):
+    temp_set_state(msg,"registration_set_faculty")
     TelegramBot.sendMessage(msg["chat"]["id"], 'Регистрация. Я ...',
                             reply_markup=ReplyKeyboardMarkup(
                                 keyboard=[

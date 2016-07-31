@@ -26,7 +26,7 @@ SECRET_KEY = '5=#uov4wqeb@%e2wkv+203eso%xw$n+6mw1zg7&78orudxj8^t'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-TOKEN = '261615304:AAHn-Vn9FpVkpfJxpx7RE00AYfRIii8v8zk'
+TOKEN = os.environ['BOT_TOKEN']
 
 # Application definition
 
