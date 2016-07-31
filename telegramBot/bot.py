@@ -87,7 +87,7 @@ def text_handler(msg):
 def temp_get_state(msg):
     with open('telegramBot/temp.json', 'r') as f:
         data = json.loads(f.read())
-    if not msg["from"]["id"] in data['data']:
+    if not msg["from"]["id"] in data['data'].keys():
         data['data'][msg["from"]["id"]] = "registration"
     return data['data'][msg['from']['id']]
 
