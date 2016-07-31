@@ -83,6 +83,7 @@ def text_handler(msg):
     else:
         eval(temp_get_state(msg))(msg)
 
+
 def temp_get_state(msg):
     with open('telegramBot/temp.json', 'r') as f:
         data = json.loads(f.read())
@@ -90,11 +91,12 @@ def temp_get_state(msg):
         data['data'][msg["from"]["id"]] = "registration"
     return data['data'][msg['from']['id']]
 
+
 def temp_set_state(msg, state):
     with open('telegramBot/temp.json', 'r') as f:
         data = json.loads(f.read())
     print(data)
-    data['data'][msg["from"]["id"]] = state
+    data['data'][msg["from"]["id"]] = state.__name__
     with open('telegramBot/temp.json', 'w') as f:
         f.write(json.dumps(data))
 
@@ -143,12 +145,10 @@ def re_text(msg):
         template_file = (open("templates/thanks_answers.txt", "r").read().splitlines())
         line = random.choice(template_file)
         TelegramBot.sendMessage(msg["chat"]["id"], line)
-      
-chat_flavors = ['chat', 'edited_chat']
 
 
 def registration(msg):
-    temp_set_state(msg,"registration_set_faculty")
+    temp_set_state(msg,registration_set_faculty)
     TelegramBot.sendMessage(msg["chat"]["id"], 'Регистрация. Я ...',
                             reply_markup=ReplyKeyboardMarkup(
                                 keyboard=[
