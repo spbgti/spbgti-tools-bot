@@ -1,6 +1,14 @@
 
 .idea/workspace.xml
+.idea/misc.xml
+.idea/spbgtitoolsbot.iml
 
 spbgtitoolsbot/__pycache__/
 telegramBot/__pycache__/
 telegramBot/migrations/__pycache__/
+.idea/codeStyleSettings.xml
+telegramBot/log.txt
+telegramBot/migrations/0001_initial.py
+telegramBot/migrations/0002_user_group_number.py
+telegramBot/migrations/0003_auto_20160801_2016.py
+telegramBot/migrations/0004_auto_20160801_2025.py
