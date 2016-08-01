@@ -14,6 +14,7 @@ from telepot.delegate import per_chat_id, create_open
 import sys
 import re
 import random
+from .models import User
 
 logger = logging.getLogger("telegramBot")
 
@@ -64,6 +65,17 @@ def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     logger.info("Message processing:")
     logger.info(content_type + ' by ' + str(msg['from']['id']))
+    try:
+        user = User.objects.get(telegram_id=msg['from']['id'])
+    except User.DoesNotExist:
+        user = User.create(telegram_id=msg['from']['id'])
+    state = user.get_state()
+    if state is None:
+        logger.error("Error in state-field, user " + user.telegram_id)
+
+    state.handler(msg, user)
+
+    '''
     if content_type == 'text':
         text_handler(msg)  # это текстовое сообщение
         re_text(msg)
@@ -75,7 +87,7 @@ def handle(msg):
         location_handler(msg)
     else:
         other_handler(msg)
-
+    '''
 
 def text_handler(msg):
     if msg["text"] == "/start":
