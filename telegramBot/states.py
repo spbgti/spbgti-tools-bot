@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-
+import json
+import requests
 import random
 import telepot
 from spbgtitoolsbot import settings
@@ -28,7 +29,7 @@ class State:
             TelegramBot.sendMessage(chat_id, msg['text'], reply_markup=reply_markup)
         # реализовать универсальную функцию для отправки сообщений, возможно реализовать объект Message
 
-    def start(self, chat_id):
+    def start(self, chat_id, user):
         if len(self.start_messages) > 0:
             self.send_message(random.choice(self.start_messages), chat_id)
 
@@ -53,10 +54,10 @@ class RegistrationState(State):
         {
             'type': 'text',
             'text': 'Ты учишься у нас?',
-            'custom_keyboard': [["Да", "Нет"]],
+            'custom_keyboard': [["Нет", "Да"]],
         },
     ]
-    possible_response = ["да", "нет"]
+    possible_response = ["нет", "да"]
     error_messages = [
         {
             'type': 'text',
@@ -64,7 +65,7 @@ class RegistrationState(State):
         },
         {
             'type': 'text',
-            'text': 'Ты лошок, давай ещё:',
+            'text': 'Попробуй ещё раз:',
         },
     ]
     # start() наследуется от предка
@@ -73,11 +74,12 @@ class RegistrationState(State):
         chat_id = user_msg['chat']['id']
 
         if user_msg['text'].lower() == self.possible_response[0]:
-            user.is_student = True
-            user.change_state(Menu())
+            user.is_student = False
+            user.change_state(RegistrationSuccessState())
 
         elif user_msg['text'].lower() == self.possible_response[1]:
-            user.is_student = False
+            user.is_student = True
+            user.change_state(RegistrationSetGroup())#группа
         else:
             self.send_message(random.choice(self.error_messages), chat_id)  # отправляем ошибку
             user.change_state(self)  # замыкаем состояние
@@ -85,11 +87,95 @@ class RegistrationState(State):
 
         user.save()
 
-class Menu(State):
+class RegistrationSuccessState(State):
     start_messages = [
         {
             'type': 'text',
-            'text': 'У нас отличное меню. Выбирай.',
+            'text': 'Ты абитуриент',
+
+        },
+        {
+            'type': 'text',
+            'text': 'Ты студент',
+        },
+    ]
+    def start(self, chat_id, user):
+        if user.is_student:
+            self.send_message(self.start_messages[1], chat_id)
+            user.change_state(MenuState())
+        else:
+            self.send_message(self.start_messages[0], chat_id)
+            user.change_state(SimpleMenuState())
+
+    def handler(self, user_msg, user):
+        user.change_state(self)
+
+
+class RegistrationSetGroup(State):
+    start_messages = [
+        {
+            'type': 'text',
+            'text': 'Введи номер группы',
+        },
+    ]
+    error_messages = [
+        {
+            'type': 'text',
+            'text': 'Давай попробуем ещё раз:',
+        },
+        {
+            'type': 'text',
+            'text': 'Может ещё разок попробуешь?:',
+        },
+    ]
+
+    def handler(self, user_msg, user):
+        chat_id = user_msg['chat']['id']
+
+        if True:  # группа есть в базе
+            user.change_state(MenuState())
+
+        user.save()
+    pass
+
+
+class SimpleMenuState(State):
+    start_messages = [
+        {
+            'type': 'text',
+            'text': 'У нас для тебя есть:',
+            'custom_keyboard': [["Информация"]],
+        },
+    ]
+    possible_response = ["информация"]
+    error_messages = [
+        {
+            'type': 'text',
+            'text': 'Давай попробуем ещё раз:',
+        },
+        {
+            'type': 'text',
+            'text': 'Может ещё разок попробуешь?:',
+        },
+    ]
+
+    def handler(self, user_msg, user):
+        chat_id = user_msg['chat']['id']
+        if user_msg['text'].lower() == self.possible_response[0]:
+            user.change_state(Information())
+            user.is_student = False
+        else:
+            self.send_message(random.choice(self.error_messages), chat_id)
+            user.change_state(self)
+            return None
+
+
+
+class MenuState(State):
+    start_messages = [
+        {
+            'type': 'text',
+            'text': 'Выбирай:',
             'custom_keyboard': [["Информация", "Расписание"]],
         },
     ]
@@ -114,15 +200,15 @@ class Menu(State):
 
         elif user_msg['text'].lower() == self.possible_response[1]:
             user.is_student = False
-            user.change_state(Schedule_students())
+            user.change_state(ScheduleState())
         else:
-            self.send_message(random.choice(self.error_messages), chat_id)  # отправляем ошибку
-            user.change_state(self)  # замыкаем состояние
+            self.send_message(random.choice(self.error_messages), chat_id)
+            user.change_state(self)
             return None
 
         user.save()
 
-class Schedule_students(State):
+class ScheduleState(State):
     start_messages = [
         {
             'type': 'text',
@@ -147,30 +233,30 @@ class Schedule_students(State):
 
     def handler(self, user_msg, user):
         chat_id = user_msg['chat']['id']
-
+        user.is_student = True
+        response = requests.get('http://127.0.0.1:8001/api/get_schedule_by_group/123/')
+        print(response.json())
         if user_msg['text'].lower() == self.possible_response[0]:
-            user.is_student = True
-            # сегодня
+            pass
 
         elif user_msg['text'].lower() == self.possible_response[1]:
-            user.is_student = False
+            pass
             # завтра
 
         elif user_msg['text'].lower() == self.possible_response[2]:
-            user.is_student = False
+            pass
             # эта неделя
-
         elif user_msg['text'].lower() == self.possible_response[3]:
-            user.is_student = False
+            pass
             # вся неделя
 
         elif user_msg['text'].lower() == self.possible_response[4]:
-            user.is_student = False
-            # назад
+            user.change_state(MenuState())
+
 
         else:
-            self.send_message(random.choice(self.error_messages), chat_id)  # отправляем ошибку
-            user.change_state(self)  # замыкаем состояние
+            self.send_message(random.choice(self.error_messages), chat_id)
+            user.change_state(self)
             return None
 
         user.save()
@@ -180,7 +266,7 @@ class Information(State):
             {
                 'type': 'text',
                 'text': 'Это информация о боте',
-                'custom_keyboard': ["Назад"],
+                'custom_keyboard': [["Назад"]],
             },
         ]
         possible_response = ["назад"]
@@ -198,13 +284,12 @@ class Information(State):
         def handler(self, user_msg, user):
             chat_id = user_msg['chat']['id']
 
-            if user_msg['text'].lower() == self.possible_response[0]:
-                user.is_student = True
-
+            if user_msg['text'].lower() == self.possible_response:
+                user.change_state(MenuState())
 
             else:
-                self.send_message(random.choice(self.error_messages), chat_id)  # отправляем ошибку
-                user.change_state(self)  # замыкаем состояние
+                self.send_message(random.choice(self.error_messages), chat_id)
+                user.change_state(self)
                 return None
 
             user.save()
