@@ -37,7 +37,7 @@ class State:
         pass
 
 
-class StartCommandState(State):
+class StartCommand(State):
     start_messages = [
         {
             'type': 'text',
@@ -47,9 +47,9 @@ class StartCommandState(State):
         },
     ]
     def handler(self, user_msg, user):
-        user.change_state(RegistrationState())
+        user.change_state(Registration())
 
-class RegistrationState(State):
+class Registration(State):
     start_messages = [
         {
             'type': 'text',
@@ -75,7 +75,7 @@ class RegistrationState(State):
 
         if user_msg['text'].lower() == self.possible_response[0]:
             user.is_student = False
-            user.change_state(RegistrationSuccessState())
+            user.change_state(RegistrationSuccess())
 
         elif user_msg['text'].lower() == self.possible_response[1]:
             user.is_student = True
@@ -87,7 +87,7 @@ class RegistrationState(State):
 
         user.save()
 
-class RegistrationSuccessState(State):
+class RegistrationSuccess(State):
     start_messages = [
         {
             'type': 'text',
@@ -102,10 +102,10 @@ class RegistrationSuccessState(State):
     def start(self, chat_id, user):
         if user.is_student:
             self.send_message(self.start_messages[1], chat_id)
-            user.change_state(MenuState())
+            user.change_state(Menu())
         else:
             self.send_message(self.start_messages[0], chat_id)
-            user.change_state(SimpleMenuState())
+            user.change_state(SimpleMenu())
 
     def handler(self, user_msg, user):
         user.change_state(self)
@@ -133,13 +133,13 @@ class RegistrationSetGroup(State):
         chat_id = user_msg['chat']['id']
 
         if True:  # группа есть в базе
-            user.change_state(MenuState())
+            user.change_state(Menu())
 
         user.save()
     pass
 
 
-class SimpleMenuState(State):
+class SimpleMenu(State):
     start_messages = [
         {
             'type': 'text',
@@ -171,7 +171,7 @@ class SimpleMenuState(State):
 
 
 
-class MenuState(State):
+class Menu(State):
     start_messages = [
         {
             'type': 'text',
@@ -200,7 +200,7 @@ class MenuState(State):
 
         elif user_msg['text'].lower() == self.possible_response[1]:
             user.is_student = False
-            user.change_state(ScheduleState())
+            user.change_state(Schedule())
         else:
             self.send_message(random.choice(self.error_messages), chat_id)
             user.change_state(self)
@@ -208,7 +208,7 @@ class MenuState(State):
 
         user.save()
 
-class ScheduleState(State):
+class Schedule(State):
     start_messages = [
         {
             'type': 'text',
@@ -251,7 +251,7 @@ class ScheduleState(State):
             # вся неделя
 
         elif user_msg['text'].lower() == self.possible_response[4]:
-            user.change_state(MenuState())
+            user.change_state(Menu())
 
 
         else:
@@ -285,7 +285,7 @@ class Information(State):
             chat_id = user_msg['chat']['id']
 
             if user_msg['text'].lower() == self.possible_response:
-                user.change_state(MenuState())
+                user.change_state(Menu())
 
             else:
                 self.send_message(random.choice(self.error_messages), chat_id)

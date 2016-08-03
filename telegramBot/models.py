@@ -13,7 +13,7 @@ class User(models.Model):
     @classmethod
     def create(cls, telegram_id):
         user = cls(telegram_id=telegram_id)
-        cls.change_state(user, StartCommandState())
+        cls.change_state(user, StartCommand())
         return user
 
     def __str__(self):
@@ -30,6 +30,6 @@ class User(models.Model):
         if not isinstance(state, State):
             return None
         #TODO: костыль с chat-id, используется from-id
-        state.start(self.telegram_id)
+        state.start(self.telegram_id, self)
         self.state = state.__class__.__name__
         self.save()
