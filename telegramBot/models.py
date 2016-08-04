@@ -7,7 +7,7 @@ from .states import *
 class User(models.Model):
     telegram_id = models.CharField("Id аккаунта телеграм", max_length=12, unique=True, primary_key=True)
     state = models.CharField("Состояние", default="", max_length=150)
-    is_student = models.BooleanField("Учащийся", blank=True, default=True)
+    is_student = models.BooleanField("Учащийся", blank=True, default=False)
     group_number = models.CharField("Номер группы", max_length=11, blank=True, null=True)
 
     @classmethod
@@ -25,6 +25,7 @@ class User(models.Model):
             return state
         else:
             return None
+
 
     def change_state(self, state):
         if not isinstance(state, State):
