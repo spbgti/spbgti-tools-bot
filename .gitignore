@@ -6,6 +6,7 @@
 spbgtitoolsbot/__pycache__/
 telegramBot/__pycache__/
 telegramBot/migrations/__pycache__/
+db.sqlite3
 .idea/codeStyleSettings.xml
 telegramBot/log.txt
 telegramBot/migrations/0001_initial.py
