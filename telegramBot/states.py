@@ -18,8 +18,8 @@ class State:
     ]  # сообщения об ошибках
     start_messages = []  # начальные сообщения
 
-    @staticmethod
-    def send_message(msg, chat_id):
+    @classmethod
+    def send_message(cls, msg, chat_id):
         if 'custom_keyboard' in msg:
             reply_markup = ReplyKeyboardMarkup(keyboard=[list(map(lambda x:  KeyboardButton(text=x), i)) for i in msg['custom_keyboard']], resize_keyboard=True, one_time_keyboard=True)
         else:
@@ -27,6 +27,8 @@ class State:
 
         if msg['type'] == 'text':
             TelegramBot.sendMessage(chat_id, msg['text'], reply_markup=reply_markup)
+
+        return msg
         # реализовать универсальную функцию для отправки сообщений, возможно реализовать объект Message
 
     def start(self, chat_id, user):
