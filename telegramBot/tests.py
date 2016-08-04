@@ -20,8 +20,8 @@ class BotTestCase(TestCase):
 
     def test_user_create(self):
         states.State.send_message = Mock(side_effect=(lambda *args, **kwargs: print(args)))
-        #: None -> `CommandStart` -> `Registration`
         bot.handle(self.msg)
+        #: None -> `CommandStart` -> `Registration`
         test_man = models.User.objects.get(telegram_id=self.telegram_id)
         self.assertEqual(test_man.state, "Registration")
 
