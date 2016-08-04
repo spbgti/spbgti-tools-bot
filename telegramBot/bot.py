@@ -26,9 +26,7 @@ def webhook(request, token):
         logger.warning("Invalide token")
         return HttpResponseForbidden('Invalid token')
     msg = request.body.decode('utf-8')
-    logger.info("Message received from webhook:")
-    logger.info(msg)
-    logger.info("from " + request.META.get('REMOTE_ADDR', None))
+    logger.info("Message received from webhook from " + request.META.get('REMOTE_ADDR', None))
     try:
         payload = json.loads(msg)
     except ValueError:
@@ -64,6 +62,7 @@ def newlog(*args):
 def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     logger.info("Message processing:")
+    logger.info(msg)
     logger.info(content_type + ' by ' + str(msg['from']['id']))
     try:
         user = User.objects.get(telegram_id=msg['from']['id'])

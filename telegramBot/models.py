@@ -13,7 +13,7 @@ class User(models.Model):
     @classmethod
     def create(cls, telegram_id):
         user = cls(telegram_id=telegram_id)
-        cls.change_state(user, StartCommandState())
+        cls.change_state(user, StartCommand())
         return user
 
     def __str__(self):
