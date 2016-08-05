@@ -15,9 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.views.static import serve
+from . import settings
 
 urlpatterns = [
     #command('start', StartView.as_command_view()),
     url(r'^telegramBot/', include('telegramBot.urls')),
     url(r'^admin/', admin.site.urls),
+    url(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT})
 ]
