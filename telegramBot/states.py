@@ -48,8 +48,10 @@ class StartCommand(State):
                     'А сейчас мы попросим тебя ответить на несколько вопросов:',
         },
     ]
+
     def handler(self, user_msg, user):
         user.change_state(Registration())
+
 
 class Registration(State):
     start_messages = [
@@ -74,14 +76,13 @@ class Registration(State):
 
     def handler(self, user_msg, user):
         chat_id = user_msg['chat']['id']
-
         if user_msg['text'].lower() == self.possible_response[0]:
             user.is_student = False
             user.change_state(RegistrationSuccess())
 
         elif user_msg['text'].lower() == self.possible_response[1]:
             user.is_student = True
-            user.change_state(RegistrationSetGroup())#группа
+            user.change_state(RegistrationSetGroup()) # группа
         else:
             self.send_message(random.choice(self.error_messages), chat_id)  # отправляем ошибку
             user.change_state(self)  # замыкаем состояние
@@ -94,7 +95,6 @@ class RegistrationSuccess(State):
         {
             'type': 'text',
             'text': 'Ты абитуриент',
-
         },
         {
             'type': 'text',
