@@ -76,8 +76,6 @@ class Registration(State):
 
     def handler(self, user_msg, user):
         chat_id = user_msg['chat']['id']
-        print(type(user_msg['text']))
-        print(type(self.possible_response[0]))
         if user_msg['text'].lower() == self.possible_response[0]:
             user.is_student = False
             user.change_state(RegistrationSuccess())
