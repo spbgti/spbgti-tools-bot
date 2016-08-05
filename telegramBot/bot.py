@@ -15,10 +15,11 @@ import sys
 import re
 import random
 from .models import User
-
+from queue import Queue
 logger = logging.getLogger("telegramBot")
 
 TelegramBot = telepot.Bot(settings.TOKEN)
+update_queue = Queue()
 
 @csrf_exempt
 def webhook(request, token):
@@ -27,25 +28,16 @@ def webhook(request, token):
         return HttpResponseForbidden('Invalid token')
     msg = request.body.decode('utf-8')
     logger.info("Message received from webhook from " + request.META.get('REMOTE_ADDR', None))
-    try:
-        payload = json.loads(msg)
-    except ValueError:
-        logger.warning("Invalid request body")
-        return HttpResponseBadRequest('Invalid request body')
-    else:
-        handle(payload['message'])
-        return JsonResponse({}, status=200)
+    update_queue.put(msg)
+    return JsonResponse({}, status=200)
+    # TODO: сделать очередь
 
 
 def start():
     if 'LOCAL' in os.environ.keys() and os.environ['LOCAL'] == 'YES':
         newlog("запускаю longpoll")
         TelegramBot.setWebhook() # disable webhook
-        TelegramBot.message_loop(handle) #1
-        #TelegramBot.message_loop({'inline_query': on_inline_query,
-         #                 'chosen_inline_result': on_chosen_inline_result},
-         #                       )
-        #TelegramBot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query}) #2
+        TelegramBot.message_loop(callback={'chat': handle}) #1
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
     newlog("Бот запущен")
@@ -74,71 +66,8 @@ def handle(msg):
 
     state.handler(msg, user)
 
-    '''
-    if content_type == 'text':
-        text_handler(msg)  # это текстовое сообщение
-        re_text(msg)
-    elif content_type == 'sticker':
-        sticker_handler(msg)
-    elif content_type == 'document':
-        document_handler(msg)
-    elif content_type == 'location':
-        location_handler(msg)
-    else:
-        other_handler(msg)
-    '''
 
-def text_handler(msg):
-    if msg["text"] == "/start":
-        command_start(msg)
-    if msg["text"] == "/info":
-        command_info(msg)
-
-
-def command_start(msg):
-    template_file = open("templates/commandstart.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"],template_file.read())
-    template_file.close()
-
-
-def command_info(msg):
-    template_file = open("templates/commandinfo.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
-    template_file.close()
-
-
-def document_handler(msg):
-    template_file = open("templates/document.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
-    template_file.close()
-
-
-def sticker_handler(msg):
-    template_file = open("templates/sticker.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
-    template_file.close()
-
-
-def location_handler(msg):
-    template_file = open("templates/location.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
-    template_file.close()
-
-
-def other_handler(msg):
-    template_file = open("templates/other.txt", "r")
-    TelegramBot.sendMessage(msg["chat"]["id"], template_file.read())
-    template_file.close()
-
-
-def re_text(msg):
-    result = re.findall("спасиб", str(msg))
-    if result:
-        template_file = (open("templates/thanks_answers.txt", "r").read().splitlines())
-        line = random.choice(template_file)
-        TelegramBot.sendMessage(msg["chat"]["id"], line)
-        template_file.close()
-
+'''
 
 
 def on_chat_message(msg):  # для 2 (callback_query)
@@ -161,3 +90,4 @@ def on_callback_query(msg):
 
 
 
+'''
