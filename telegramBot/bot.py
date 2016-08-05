@@ -15,7 +15,10 @@ import sys
 import re
 import random
 from .models import User
-from queue import Queue
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 logger = logging.getLogger("telegramBot")
 
 TelegramBot = telepot.Bot(settings.TOKEN)
