@@ -41,11 +41,7 @@ def start():
     if 'LOCAL' in os.environ.keys() and os.environ['LOCAL'] == 'YES':
         newlog("запускаю longpoll")
         TelegramBot.setWebhook() # disable webhook
-        TelegramBot.message_loop(handle) #1
-        #TelegramBot.message_loop({'inline_query': on_inline_query,
-         #                 'chosen_inline_result': on_chosen_inline_result},
-         #                       )
-        #TelegramBot.message_loop({'chat': on_chat_message, 'callback_query': on_callback_query}) #2
+        TelegramBot.message_loop(callback={'chat': handle})
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
     newlog("Бот запущен")
