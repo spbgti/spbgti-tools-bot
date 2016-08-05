@@ -43,6 +43,7 @@ def start():
         TelegramBot.message_loop(callback={'chat': handle}) #1
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
+        TelegramBot.message_loop(callback={'chat': handle}, source=update_queue)  # 1
     newlog("Бот запущен")
     return True
 
