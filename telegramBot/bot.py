@@ -33,6 +33,7 @@ def webhook(request, token):
         logger.warning("Invalid request body")
         return HttpResponseBadRequest('Invalid request body')
     else:
+        # добавить валидацию сообщения
         handle(payload['message'])
         return JsonResponse({}, status=200)
 
