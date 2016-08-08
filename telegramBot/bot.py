@@ -23,7 +23,7 @@ TelegramBot = telepot.Bot(settings.TOKEN)
 @csrf_exempt
 def webhook(request, token):
     if token != settings.TOKEN:
-        logger.warning("Invalide token")
+        logger.warning("Invalid token")
         return HttpResponseForbidden('Invalid token')
     msg = request.body.decode('utf-8')
     logger.info("Message received from webhook from " + request.META.get('REMOTE_ADDR', None))
@@ -40,21 +40,13 @@ def webhook(request, token):
 
 def start():
     if 'LOCAL' in os.environ.keys() and os.environ['LOCAL'] == 'YES':
-        newlog("запускаю longpoll")
+        logger.info("запускаю longpoll")
         TelegramBot.setWebhook() # disable webhook
         TelegramBot.message_loop(callback={'chat': handle})
     else:
         TelegramBot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
-    newlog("Бот запущен")
+    logger.info("Бот запущен")
     return True
-
-
-def newlog(*args):
-    for arg in args:
-        logger.info(arg)
-
-    return True
-
 
 def handle(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)

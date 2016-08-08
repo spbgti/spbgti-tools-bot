@@ -6,3 +6,4 @@ psycopg2
 whitenoise==3.2
 telepot==8.3
 requests
+mock
