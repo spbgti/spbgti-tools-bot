@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
-from .states import *
+
+from bot.states.base import State
 
 
 class User(models.Model):
@@ -13,7 +14,8 @@ class User(models.Model):
     @classmethod
     def create(cls, telegram_id):
         user = cls(telegram_id=telegram_id)
-        cls.change_state(user, StartCommand())
+        # TODO change here initial state here
+        cls.change_state(user, None)
         return user
 
     def __str__(self):
