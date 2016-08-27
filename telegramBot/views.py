@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from django.shortcuts import render
 from django.http import HttpResponse
-from . import bot
+
+from bot import start
 
 
 def index(request):
-    if bot.start():
+    if start.start():
         return HttpResponse("Это работает!")

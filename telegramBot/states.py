@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+from spbgtitoolsbot import settings
+from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton
+
 import json
 import requests
 import random
 import telepot
-from spbgtitoolsbot import settings
-from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton
+
 TelegramBot = telepot.Bot(settings.TOKEN)
+
+
 
 
 class State:
