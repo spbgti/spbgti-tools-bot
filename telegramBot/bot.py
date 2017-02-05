@@ -21,6 +21,7 @@ def webhook(request):
         logger.warning("Invalid request body")
         return HttpResponseBadRequest('Invalid request body')
     else:
+        print(payload)
         handle(payload['message'])
         return JsonResponse({}, status=200)
 
