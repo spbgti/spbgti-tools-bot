@@ -1,4 +1,3 @@
-unipath
 dj-database-url==0.4.0
 Django==1.10.5
 gunicorn==19.4.5
