@@ -12,10 +12,7 @@ logger = logging.getLogger("telegramBot")
 bot = telepot.Bot(settings.TOKEN)
 
 @csrf_exempt
-def webhook(request, token):
-    if token != settings.TOKEN:
-        logger.warning("Invalid token")
-        return HttpResponseForbidden('Invalid token')
+def webhook(request):
     msg = request.body.decode('utf-8')
     logger.info("Message received from webhook from " + request.META.get('REMOTE_ADDR', None))
     try:
