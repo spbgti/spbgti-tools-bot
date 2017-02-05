@@ -21,8 +21,8 @@ def webhook(request):
         logger.warning("Invalid request body")
         return HttpResponseBadRequest('Invalid request body')
     else:
-        print(payload)
-        handle(payload['message'])
+        query = payload.get('message') or payload.get('callback_query')
+        handle(query)
         return JsonResponse({}, status=200)
 
 
