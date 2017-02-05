@@ -14,8 +14,13 @@ deploy:
   provider: heroku
   api_key:
     secure: "JO8wZSeAGlGmgz23bYvRMe/ifL8oSO+BD2zjj24wxjz8PJbZa+X6LhKh63HBabc8E+CVbAa07AuHE4qP4ZGnNOw8Tl2ylnEYrcQkRiBuI1GN3gNDfXDDIoZBrHG2NvWZJ+doXCGt8k9ZCjlNcdvEgAhMq+SKpnEsa8guzyZvAv8F8jIGT2w5BluOwPRy3l0pCSPFbrb3WnMouXqOVhqz8NYQh5uXGBszAtoR3kb8UjIxWEPtsS3aTDplhGrpBTnXClPiygCSRd9rvruoFbqramBfD9JtYVIZEd2wF9RF0moVu2jTziSFv4Pue48y/votZ6UYk60r2h2AoGz2MBeRmalHoFEox5Dqnvwe8HnUjbX0AMhyvMSt+3cL4F7MwINL8+MC3IpWMNjhzk5z0F9Eqr+nXVnfHU11AayeFIhyMXH3C1BlFhVVBP3Pc1pol3l2Bz76zYZUyZJzUW9fhkdtECMpjY2JgKvMRD2y46gjnV+cJmrldvUc9sL3Ymzgvfulh6ESPWcnnIyWcbWOzyoOtpSEl7eLbSq9+W9NYi32WtEJ95ErYorHrpmt8VpurxQV5aFQSUHDZ+n06Qj4A7nzKIh3OV93bMm3CQWGnu/sIxGEoWaLsdv3MQJIBxn0NbCZrG1VoLyOfLBj61iLM3+92vDuogOaN0I8k1bUjF/ARgg="
-  app: spbgti-tools-bot-staging
+  app:
+    dev: spbgti-tools-bot-staging
+    master: spbgti-tools-bot
   run:
-  - sh heroku.sh --app spbgti-tools-bot-staging
+    dev:
+      - sh heroku.sh --app spbgti-tools-bot-staging
+    master:
+      - sh heroku.sh --app spbgti-tools-bot
   after_deploy:
   - echo "Running integration tests"
