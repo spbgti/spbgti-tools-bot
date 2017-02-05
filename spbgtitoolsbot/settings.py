@@ -158,3 +158,6 @@ STATICFILES_DIRS = (
 )
 
 SCHEDULE_API = os.environ['SCHEDULE_URL']
+
+if os.environ.get('LOCAL') != 'YES':
+    SERVER_URL = os.environ['SERVER_URL']

@@ -34,7 +34,7 @@ def start():
         bot.deleteWebhook()
         bot.message_loop(handle)
     else:
-        bot.setWebhook(url="https://spbgti-tools-bot.herokuapp.com/telegramBot/%s/" % settings.TOKEN)
+        bot.setWebhook(url="{}/telegramBot/{}/".format(settings.SERVER_URL, settings.TOKEN))
     newlog("Бот запущен")
     return True
 
