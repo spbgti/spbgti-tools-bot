@@ -156,3 +156,5 @@ LOGGING = {
 STATICFILES_DIRS = (
     os.path.join(PROJECT_ROOT, 'static'),
 )
+
+SCHEDULE_API = os.environ['SCHEDULE_URL']

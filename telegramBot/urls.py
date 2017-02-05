@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
-from . import views
+
+from spbgtitoolsbot import settings
 from . import bot
 
 urlpatterns = [
-    url(r'^$', views.index, name='index'),
-    url(r'^(?P<token>.+)/$', bot.webhook),
+    url(r'^%s/$' % settings.TOKEN, bot.webhook),
 ]
 
 

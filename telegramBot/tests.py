@@ -1,15 +1,10 @@
-from django.test import TestCase
-
-# Create your tests here.
-from django.test import TestCase
-from . import bot
-from . import models
-from . import states
 import os
-import json
-from mock import patch, Mock
 
+from django.test import TestCase
+from mock import Mock
 
+from bot import states, start
+from . import models
 
 
 class BotTestCase(TestCase):
@@ -20,7 +15,7 @@ class BotTestCase(TestCase):
 
     def test_user_create(self):
         states.State.send_message = Mock(side_effect=(lambda *args, **kwargs: print(args)))
-        bot.handle(self.msg)
+        start.handle(self.msg)
         #: None -> `CommandStart` -> `Registration`
         test_man = models.User.objects.get(telegram_id=self.telegram_id)
         self.assertEqual(test_man.state, "Registration")
