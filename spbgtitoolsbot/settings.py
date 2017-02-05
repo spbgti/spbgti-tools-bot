@@ -25,7 +25,7 @@ SECRET_KEY = '5=#uov4wqeb@%e2wkv+203eso%xw$n+6mw1zg7&78orudxj8^t'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['spbgti-tools-bot-staging.herokuapp.com', 'spbgti-tools-bot.herokuapp.com', '127.0.0.1']
 
 TOKEN = os.environ['BOT_TOKEN']
 
