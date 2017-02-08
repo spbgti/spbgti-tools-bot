@@ -14,6 +14,8 @@ def callback(cls):
     callbacks[cls.__name__] = cls
     return cls
 
+_weekdays = ('🌑 Понедельник', '🌘 Вторник', '🌗 Среда',
+            '🌖 Четверг', '🌕 Пятница', '🌝 Суббота', '🌚 Воскресенье')
 
 class InlineKeyboardCallback:
     """
@@ -75,8 +77,7 @@ class InlineKeyboardCallback:
 
 @callback
 class DayScheduleCallback(InlineKeyboardCallback):
-    days = ('🌑 Понедельник', '🌒 Вторник', '🌓 Среда',
-            '🌔 Четверг', '🌖 Пятница', '🌗 Суббота', '🌘 Воскресенье')
+    days = _weekdays
     months = ('января', "февраля", "марта", "апреля", "мая", "июня",
               "июля", "августа", "сентября", "октября", "ноября", "декабря")
     keyboard = [[['Сегодня', 0], ['Завтра', 1]]]
@@ -104,7 +105,7 @@ class DayScheduleCallback(InlineKeyboardCallback):
         schedule = [exercise for exercise in schedule if
                     exercise['day'] == str(weekday) and
                     (exercise['parity'] is None or exercise['parity'] == str(parity))]
-
+        print(parity)
         message = '{}, {} {} ({})\n'.format(cls.days[weekday - 1],
                                             day_date.day,
                                             cls.months[day_date.month-1],
@@ -129,8 +130,7 @@ class DayScheduleCallback(InlineKeyboardCallback):
 
 @callback
 class WeekScheduleCallback(InlineKeyboardCallback):
-    days = ('🌑 Понедельник', '🌒 Вторник', '🌓 Среда',
-            '🌔 Четверг', '🌖 Пятница', '🌗 Суббота', '🌘 Воскресенье')
+    days = _weekdays
     keyboard = [[['Четная', 0], ['Нечетная', 1]]]
 
     @classmethod
@@ -183,8 +183,7 @@ class AllScheduleCallback(InlineKeyboardCallback):
     AllScheduleCallback_1_0_2 (1 - нажатие, 0 и 2 - предыдущий выбор)
     По умолчанию выбор на четная-понедельник.
     """
-    days = ('🌑 Понедельник', '🌒 Вторник', '🌓 Среда',
-            '🌔 Четверг', '🌖 Пятница', '🌗 Суббота', '🌘 Воскресенье')
+    days = _weekdays
     keyboard = [
         [['Четная', 0], ['Нечетная', 1]],
         [['Пон', 2], ['Вт', 3], ['Ср', 4], ['Чет', 5], ['Пят', 6]]
