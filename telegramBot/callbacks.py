@@ -1,12 +1,12 @@
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
-from telepot import Bot
+import telepot
 from spbgtitoolsbot.settings import SCHEDULE_API, TOKEN
 import requests
 from datetime import date, timedelta
 from copy import deepcopy
 from . import scheduleapi
 
-bot = Bot(TOKEN)
+bot = telepot.Bot(TOKEN)
 callbacks = {}
 
 
@@ -29,13 +29,14 @@ class InlineKeyboardCallback:
     @classmethod
     def handle(cls, query, user):
         msg_id = (query['message']['chat']['id'], query['message']['message_id'])
+        callback_id = query['id']
         group = user.group_number
 
         message = cls.dispatch(query, group)
 
         keyboard = cls.get_keyboard(query)
 
-        cls.edit(msg_id, message, keyboard)
+        cls.edit(msg_id, callback_id, message, keyboard)
 
     @classmethod
     def get_keyboard(cls, query):
@@ -58,8 +59,13 @@ class InlineKeyboardCallback:
         raise NotImplementedError()
 
     @classmethod
-    def edit(cls, msg_id, msg, keyboard):
-        bot.editMessageText(msg_id, text=msg, reply_markup=keyboard)
+    def edit(cls, msg_id, callback_id, msg, keyboard):
+        try:
+            bot.editMessageText(msg_id, text=msg, reply_markup=keyboard)
+        except telepot.exception.TelegramError:
+            bot.answerCallbackQuery(callback_id, text='Уже нажато ;)')
+        else:
+            bot.answerCallbackQuery(callback_id)
 
     @classmethod
     def generate_inline_keyboard(cls, keyboard):
@@ -105,7 +111,6 @@ class DayScheduleCallback(InlineKeyboardCallback):
         schedule = [exercise for exercise in schedule if
                     exercise['day'] == str(weekday) and
                     (exercise['parity'] is None or exercise['parity'] == str(parity))]
-        print(parity)
         message = '{}, {} {} ({})\n'.format(cls.days[weekday - 1],
                                             day_date.day,
                                             cls.months[day_date.month-1],
