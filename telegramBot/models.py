@@ -10,7 +10,7 @@ class User(models.Model):
     state = models.CharField("Состояние", default="", max_length=150)
     is_student = models.BooleanField("Учащийся", blank=True, default=False)
     group_number = models.CharField("Номер группы", max_length=11, blank=True, null=True)
-    notification_time = models.CharField("Время уведомления", blank=True, null=True)
+    notification_time = models.CharField("Время уведомления", max_length=10, blank=True, null=True)
     @classmethod
     def create(cls, telegram_id):
         user = cls(telegram_id=telegram_id)
