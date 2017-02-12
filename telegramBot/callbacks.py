@@ -1,19 +1,18 @@
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
-from telepot import Bot
+import telepot
 from spbgtitoolsbot.settings import SCHEDULE_API, TOKEN
 import requests
 from datetime import date, timedelta
 from copy import deepcopy
 from . import scheduleapi
 
-bot = Bot(TOKEN)
+bot = telepot.Bot(TOKEN)
 callbacks = {}
 
 
 def callback(cls):
     callbacks[cls.__name__] = cls
     return cls
-
 
 class InlineKeyboardCallback:
     """
@@ -27,13 +26,14 @@ class InlineKeyboardCallback:
     @classmethod
     def handle(cls, query, user):
         msg_id = (query['message']['chat']['id'], query['message']['message_id'])
+        callback_id = query['id']
         group = user.group_number
 
         message = cls.dispatch(query, group)
 
         keyboard = cls.get_keyboard(query)
 
-        cls.edit(msg_id, message, keyboard)
+        cls.edit(msg_id, callback_id, message, keyboard)
 
     @classmethod
     def get_keyboard(cls, query):
@@ -56,8 +56,13 @@ class InlineKeyboardCallback:
         raise NotImplementedError()
 
     @classmethod
-    def edit(cls, msg_id, msg, keyboard):
-        bot.editMessageText(msg_id, text=msg, reply_markup=keyboard)
+    def edit(cls, msg_id, callback_id, msg, keyboard):
+        try:
+            bot.editMessageText(msg_id, text=msg, reply_markup=keyboard)
+        except telepot.exception.TelegramError:
+            bot.answerCallbackQuery(callback_id, text='Уже нажато ;)')
+        else:
+            bot.answerCallbackQuery(callback_id)
 
     @classmethod
     def generate_inline_keyboard(cls, keyboard):
@@ -70,15 +75,21 @@ class InlineKeyboardCallback:
         raise NotImplementedError()
 
 
+class BaseScheduleCallback(InlineKeyboardCallback):
+    days = ('🌑 Понедельник', '🌘 Вторник', '🌗 Среда',
+            '🌖 Четверг', '🌕 Пятница', '🌝 Суббота', '🌚 Воскресенье')
+    months = ('января', "февраля", "марта", "апреля", "мая", "июня",
+              "июля", "августа", "сентября", "октября", "ноября", "декабря")
 
+    @classmethod
+    def generate_exercise(cls, exercise):
+        return '{name} {type} {room}'.format(name=exercise['name'],
+                                             type='(' + exercise['type'] + ')' if exercise['type'] else '',
+                                             room=scheduleapi.get_room(exercise['room_id']))
 
 
 @callback
-class DayScheduleCallback(InlineKeyboardCallback):
-    days = ('🌑 Понедельник', '🌒 Вторник', '🌓 Среда',
-            '🌔 Четверг', '🌖 Пятница', '🌗 Суббота', '🌘 Воскресенье')
-    months = ('января', "февраля", "марта", "апреля", "мая", "июня",
-              "июля", "августа", "сентября", "октября", "ноября", "декабря")
+class DayScheduleCallback(BaseScheduleCallback):
     keyboard = [[['Сегодня', 0], ['Завтра', 1]]]
 
     @classmethod
@@ -104,7 +115,6 @@ class DayScheduleCallback(InlineKeyboardCallback):
         schedule = [exercise for exercise in schedule if
                     exercise['day'] == str(weekday) and
                     (exercise['parity'] is None or exercise['parity'] == str(parity))]
-
         message = '{}, {} {} ({})\n'.format(cls.days[weekday - 1],
                                             day_date.day,
                                             cls.months[day_date.month-1],
@@ -113,9 +123,7 @@ class DayScheduleCallback(InlineKeyboardCallback):
             exercise = " -- "
             for ex in schedule:
                 if ex['pair'] == str(pair):
-                    exercise = '{name} ({type}) {room}'.format(name=ex['name'],
-                                                               type=ex['type'],
-                                                               room=scheduleapi.get_room(ex['room_id']))
+                    exercise = cls.generate_exercise(ex)
             message += '{}. {}\n'.format(pair, exercise)
         return message
 
@@ -128,9 +136,7 @@ class DayScheduleCallback(InlineKeyboardCallback):
 
 
 @callback
-class WeekScheduleCallback(InlineKeyboardCallback):
-    days = ('🌑 Понедельник', '🌒 Вторник', '🌓 Среда',
-            '🌔 Четверг', '🌖 Пятница', '🌗 Суббота', '🌘 Воскресенье')
+class WeekScheduleCallback(BaseScheduleCallback):
     keyboard = [[['Четная', 0], ['Нечетная', 1]]]
 
     @classmethod
@@ -161,9 +167,7 @@ class WeekScheduleCallback(InlineKeyboardCallback):
                 exercise = " -- "
                 for ex in day_schedule:
                     if ex['pair'] == str(pair):
-                        exercise = '{name} ({type}) {room}'.format(name=ex['name'],
-                                                                   type=ex['type'],
-                                                                   room=scheduleapi.get_room(ex['room_id']))
+                        exercise = cls.generate_exercise(ex)
                 message += '{}. {}\n'.format(pair, exercise)
         return message
 
@@ -176,15 +180,13 @@ class WeekScheduleCallback(InlineKeyboardCallback):
 
 
 @callback
-class AllScheduleCallback(InlineKeyboardCallback):
+class AllScheduleCallback(BaseScheduleCallback):
     """
     Клавиатура - к данным для всех кнопок прибавляем выбор по первой и второй строке
     К примеру если были выбрана четная неделя и понедельник, и была нажата кнопка "нечетная", то придет следующая data:
     AllScheduleCallback_1_0_2 (1 - нажатие, 0 и 2 - предыдущий выбор)
     По умолчанию выбор на четная-понедельник.
     """
-    days = ('🌑 Понедельник', '🌒 Вторник', '🌓 Среда',
-            '🌔 Четверг', '🌖 Пятница', '🌗 Суббота', '🌘 Воскресенье')
     keyboard = [
         [['Четная', 0], ['Нечетная', 1]],
         [['Пон', 2], ['Вт', 3], ['Ср', 4], ['Чет', 5], ['Пят', 6]]
@@ -210,9 +212,7 @@ class AllScheduleCallback(InlineKeyboardCallback):
             exercise = " -- "
             for ex in schedule:
                 if ex['pair'] == str(pair):
-                    exercise = '{name} ({type}) {room}'.format(name=ex['name'],
-                                                               type=ex['type'],
-                                                               room=scheduleapi.get_room(ex['room_id']))
+                    exercise = cls.generate_exercise(ex)
             message += '{}. {}\n'.format(pair, exercise)
         return message
 

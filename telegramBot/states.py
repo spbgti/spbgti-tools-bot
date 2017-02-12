@@ -144,7 +144,7 @@ class SettingGroup(_State):
     @classmethod
     def handle(cls, user, user_msg):
         groups = [group['number'] for group in requests.get(schedule_url+'/groups').json()]
-        if user_msg.upper() in groups:
+        if user_msg.lower() in groups:
             user.group_number = user_msg
             user.change_state(Menu)
         else:
