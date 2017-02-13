@@ -17,8 +17,12 @@ class Command(BaseCommand):
     def handle(self, *args, time, **options):
         if time in ('7:00', '7:30', '8:00'):
             day = date.today()
+            if day.isoweekday() > 5:
+                return
         elif time in ('20:00', '21:00', '22:00', '23:00'):
             day = date.today()+timedelta(days=1)
+            if 4 < day.isoweekday() < 7:
+                return
         else:
             raise CommandError('wrong notification time')
         for user in User.objects.filter(notification_time=time):
