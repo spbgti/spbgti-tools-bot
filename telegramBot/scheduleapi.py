@@ -23,7 +23,6 @@ def get_weekday_schedule(group, weekday, parity):
 
 def get_date_schedule(group, day_date):
     _, week, weekday = day_date.isocalendar()
-    print(week)
     if week % 2 == 0:
         parity = 1
     else:

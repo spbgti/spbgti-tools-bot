@@ -91,9 +91,11 @@ class Start(_State):
     start_messages = [
         {
             'type': 'text',
-            'text': 'Привет, это наш телеграм бот, и мы очень рады видеть тебя здесь! \n'
-                    'По всем вопросам и предложениям пиши @b0g3r или @anamahpro, они будут рады тебя выслушать \n'
-                    'А сейчас мы попросим тебя ответить на несколько вопросов:',
+            'text': 'Привет, я - телеграм-бот для студентов техноложки, и я очень рад видеть тебя здесь!\n'
+                    'Добро пожаловать в моё уютное гнездышко, полное удобств и расписаний\n'
+                    'По всем вопросам и предложениям пиши @b0g3r, он будет рад тебя выслушать, исправить любые недочеты'
+                    ' и записать твои пожелания\n'
+                    'А сейчас пройди через небольшое интервью :)',
         },
     ]
 
@@ -137,13 +139,13 @@ class SettingGroup(_State):
     start_messages = [
         {
             'type': 'text',
-            'text': 'Впиши свою группу'
+            'text': 'Впиши свою группу:'
         },
     ]
 
     @classmethod
     def handle(cls, user, user_msg):
-        groups = [group['number'] for group in requests.get(schedule_url+'/groups').json()]
+        groups = [group['number'].lower() for group in requests.get(schedule_url+'/groups').json()]
         if user_msg.lower() in groups:
             user.group_number = user_msg
             user.change_state(Menu)
@@ -165,10 +167,11 @@ class Menu(_State):
         {
             'type': 'text',
             'text': 'Меню:',
-            'custom_keyboard': [["Информация", "Расписание", "Настройки"]],
+            'custom_keyboard': [["Информация", "Расписание", "Уведомления"],
+                                ["Настройки"]],
         },
     ]
-    possible_response = ["информация", "расписание", "настройки"]
+    possible_response = ["информация", "расписание", "уведомления", "настройки"]
 
     @classmethod
     def handle(cls, user, user_msg):
@@ -177,6 +180,8 @@ class Menu(_State):
         elif user_msg.lower() == cls.possible_response[1]:
             user.change_state(Schedule)
         elif user_msg.lower() == cls.possible_response[2]:
+            user.change_state(NotificationMenu)
+        elif user_msg.lower() == cls.possible_response[3]:
             user.change_state(Settings) # настройки
         else:
             cls.reset(user)
@@ -188,10 +193,11 @@ class Schedule(_State):
         {
             'type': 'text',
             'text': 'Выбери тип расписания (попробуй их все!):',
-            'custom_keyboard': [["На день", "На неделю", "Полное", "Назад"]],
+            'custom_keyboard': [["День", "Неделя", "Полное"],
+                                ["Назад"]],
         },
     ]
-    possible_response = ["на день", "на неделю", "полное", "назад"]
+    possible_response = ["день", "неделя", "полное", "назад"]
 
     @classmethod
     def handle(cls, user, user_msg):
@@ -216,7 +222,27 @@ class Info(_State):
     start_messages = [
         {
             'type': 'text',
-            'text': 'Здесь будет инфо'
+            'text': 'Я создан коллективом разработчиков из vk.com/code_spbgti, которым стало однажды скучно и захотелос'
+                    'ь сделать мир лучше. Так появился я - маленький умный робот-помощник от студентов для студентов.'
+                    ' Если отбросить все технические детали, то основная моя идеология - быть максимально открытым, '
+                    'позволять другим творить и быть услышанным.\n'
+                    'Я знаю расписание всех курсов 1-5 факультетов, в том числе магистратуры\n'
+                    'Я умею выдавать его по запросу: полное, на эту/следующую неделю, на сегодня/завтра/три дня. Для '
+                    'этого используй пункт меню "Расписание"\n'
+                    'Я умею присылать каждое утро или каждый вечер расписание на день, чтобы ты знал что можно пропуст'
+                    'ить :) Меню "Уведомления". Там же можно отключить эту функцию.\n'
+
+                    'Но я всё ещё в стадии бета-теста, и только-только начал расти и развиваться. У меня есть проблемы,'
+                    ' и никто их не поможет исправить кроме вас - моих любимых пользователей. Пишите обо всех недочетах'
+                    ' @b0g3r или в сообщения паблику, я также нуждаюсь в твоих предложениях и идеях как мне развиваться'
+                    ' дальше :)\n'
+                    'У меня также есть задачи на будущее, которые постепенно будут реализовываться:\n'
+                    '- Относительное время уведомлений (зачем тебя будить в 8, если тебе ко второй?)\n'
+                    '- Расписание для ФЭМ\n'
+                    '- Доступ к методичкам\n'
+                    'Чтобы быть в курсе всех новых фишечек и изменений, подписывайся на мой новостной канал: '
+                    '@news_spbgti_bot\n'
+                    'Твой робот-помощник, @spbgti_bot'
         },
     ]
 
@@ -231,14 +257,94 @@ class Settings(_State):
     start_messages = [
         {
             'type': 'text',
-            'text': 'А здесь настройки'
+            'text': 'Настройки',
+            'custom_keyboard': [["Группа"],
+                                ["Назад"]],
         },
     ]
+    possible_response = ["группа", "назад"]
 
     @classmethod
-    def set(cls, user):
-        super().set(user)
-        user.change_state(Menu)
+    def handle(cls, user, user_msg):
+        if user_msg.lower() == cls.possible_response[0]:
+            user.change_state(SettingGroup)
+        elif user_msg.lower() == cls.possible_response[1]:
+            user.change_state(Menu)
+        else:
+            cls.reset(user)
 
 
+@state
+class NotificationMenu(_State):
+    start_messages = [
+        {
+            'type': 'text',
+            'text': 'Хочешь, чтобы я сам присылал тебе расписание? Я могу присылать каждое утро расписание на новый'
+                    ' день, либо каждый вечер расписание на следующий день. А могу вообще не присылать :(',
+            'custom_keyboard': [["Утром", "Вечером", "Не хочу"],
+                                ["Назад"]],
+        },
+    ]
+    possible_response = ["утром", "вечером", "не хочу", "назад"]
 
+    @classmethod
+    def handle(cls, user, user_msg):
+        if user_msg.lower() == cls.possible_response[0]:
+            user.change_state(SettingMorningNotification)
+        elif user_msg.lower() == cls.possible_response[1]:
+            user.change_state(SettingEveningNotification)
+        elif user_msg.lower() == cls.possible_response[2]:
+            user.notification_time = ''
+            user.change_state(Menu)
+        elif user_msg.lower() == cls.possible_response[3]:
+            user.change_state(Menu)
+        else:
+            cls.reset(user)
+
+
+@state
+class SettingMorningNotification(_State):
+    start_messages = [
+        {
+            'type': 'text',
+            'text': 'Выбери удобное для тебя время:',
+            'custom_keyboard': [["7:00", "7:30", "8:00"],
+                                ["Назад"]],
+        },
+    ]
+    possible_response = ["7:00", "7:30", "8:00", "назад"]
+
+    @classmethod
+    def handle(cls, user, user_msg):
+        if user_msg.lower() in cls.possible_response:
+            if user_msg.lower() == cls.possible_response[3]:
+                user.change_state(NotificationMenu)
+            else:
+                user.notification_time = user_msg
+                user.change_state(Menu)
+        else:
+            cls.reset(user)
+
+
+@state
+class SettingEveningNotification(_State):
+    start_messages = [
+        {
+            'type': 'text',
+            'text': 'Выбери удобное для тебя время:',
+            'custom_keyboard': [["20:00", "21:00", "22:00", "23:00"],
+                                ["Назад"]],
+        },
+    ]
+    possible_response = ["20:00", "21:00", "22:00", "23:00", "назад"]
+
+    @classmethod
+    def handle(cls, user, user_msg):
+        if user_msg.lower() in cls.possible_response:
+            if user_msg.lower() == cls.possible_response[3]:
+                user.change_state(NotificationMenu)
+            else:
+                user.notification_time = user_msg
+                user.change_state(Menu)
+        else:
+            cls.reset(user)
