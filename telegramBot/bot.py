@@ -50,7 +50,7 @@ def handle(msg):
         logger.info(' by ' + str(msg['from']['id']))
         user = User.objects.get(telegram_id=msg['from']['id'])
         callbacks[msg['data'].split('_')[0]].handle(msg, user)
-    else:
+    elif telepot.flavor(msg) == 'text':
         content_type, chat_type, chat_id = telepot.glance(msg)
         logger.info("Message processing:")
         logger.info(msg)
