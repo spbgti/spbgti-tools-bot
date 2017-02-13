@@ -282,8 +282,13 @@ class NotificationMenu(_State):
     @classmethod
     def handle(cls, user, user_msg):
         if user_msg.lower() == cls.possible_response[0]:
-            user.change_state(SettingGroup)
+            user.change_state(SettingMorningNotification)
         elif user_msg.lower() == cls.possible_response[1]:
+            user.change_state(SettingEveningNotification)
+        elif user_msg.lower() == cls.possible_response[2]:
+            user.notification_time = ''
+            user.change_state(Menu)
+        elif user_msg.lower() == cls.possible_response[3]:
             user.change_state(Menu)
         else:
             cls.reset(user)
