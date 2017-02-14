@@ -1,7 +1,7 @@
 import telepot
 from spbgtitoolsbot import settings
 import os
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest
 import json
 from django.views.decorators.csrf import csrf_exempt
 import logging
@@ -10,6 +10,7 @@ from .callbacks import callbacks
 logger = logging.getLogger("telegramBot")
 
 bot = telepot.Bot(settings.TOKEN)
+
 
 @csrf_exempt
 def webhook(request):
@@ -50,7 +51,7 @@ def handle(msg):
         logger.info(' by ' + str(msg['from']['id']))
         user = User.objects.get(telegram_id=msg['from']['id'])
         callbacks[msg['data'].split('_')[0]].handle(msg, user)
-    elif telepot.flavor(msg) == 'text':
+    elif telepot.flavor(msg) == 'chat' and telepot.glance(msg)[0] == 'text':
         content_type, chat_type, chat_id = telepot.glance(msg)
         logger.info("Message processing:")
         logger.info(msg)
