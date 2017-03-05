@@ -80,13 +80,22 @@ class BaseScheduleCallback(InlineKeyboardCallback):
             '🌖 Четверг', '🌕 Пятница', '🌝 Суббота', '🌚 Воскресенье')
     months = ('января', "февраля", "марта", "апреля", "мая", "июня",
               "июля", "августа", "сентября", "октября", "ноября", "декабря")
-
+    times = ('9:30', '11:30', '14:00', '16:00')
     @classmethod
     def generate_exercise(cls, exercise):
         return '{name} {type} {room}'.format(name=exercise['name'],
                                              type='(' + exercise['type'] + ')' if exercise['type'] else '',
                                              room=scheduleapi.get_room(exercise['room_id']))
-
+    @classmethod
+    def generate_day_schedule(cls, day_schedule: list):
+        f_day_schedule = ''
+        for pair in range(1, 5):
+            exercise = " -- "
+            for ex in day_schedule:
+                if ex['pair'] == str(pair):
+                    exercise = cls.generate_exercise(ex)
+            f_day_schedule += '{}. {}\n'.format(cls.times[pair-1], exercise)
+        return f_day_schedule
 
 @callback
 class DayScheduleCallback(BaseScheduleCallback):
@@ -118,13 +127,10 @@ class DayScheduleCallback(BaseScheduleCallback):
         message = '{}, {} {} ({})\n'.format(cls.days[weekday - 1],
                                             day_date.day,
                                             cls.months[day_date.month-1],
+
                                             "четн" if parity == 1 else 'нечетн')
-        for pair in range(1, 5):
-            exercise = " -- "
-            for ex in schedule:
-                if ex['pair'] == str(pair):
-                    exercise = cls.generate_exercise(ex)
-            message += '{}. {}\n'.format(pair, exercise)
+
+        message += cls.generate_day_schedule(schedule)
         return message
 
     @classmethod
@@ -163,12 +169,7 @@ class WeekScheduleCallback(BaseScheduleCallback):
             day_schedule = scheduleapi.get_weekday_schedule(group, weekday, parity)
 
             message += '\n{}\n'.format(cls.days[weekday - 1])
-            for pair in range(1, 5):
-                exercise = " -- "
-                for ex in day_schedule:
-                    if ex['pair'] == str(pair):
-                        exercise = cls.generate_exercise(ex)
-                message += '{}. {}\n'.format(pair, exercise)
+            message += cls.generate_day_schedule(day_schedule)
         return message
 
     @classmethod
@@ -208,12 +209,8 @@ class AllScheduleCallback(BaseScheduleCallback):
         schedule = scheduleapi.get_weekday_schedule(group, weekday, parity)
         message = '{}, ({})\n'.format(cls.days[weekday - 1],
                                       "четн" if parity == 1 else 'нечетн')
-        for pair in range(1, 5):
-            exercise = " -- "
-            for ex in schedule:
-                if ex['pair'] == str(pair):
-                    exercise = cls.generate_exercise(ex)
-            message += '{}. {}\n'.format(pair, exercise)
+
+        message += cls.generate_day_schedule(schedule)
         return message
 
     @classmethod

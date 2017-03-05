@@ -10,6 +10,7 @@ bot = Bot(TOKEN)
 
 logger = logging.getLogger("telegramBot")
 
+
 class Command(BaseCommand):
     help = 'Sends notifications'
 
@@ -23,6 +24,7 @@ class Command(BaseCommand):
             day = date.today()+timedelta(days=1).isoweekday()
         else:
             raise CommandError('wrong notification time')
+
         if day > 5:
             logger.info("No exercises today")
             return
