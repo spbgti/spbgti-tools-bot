@@ -21,7 +21,7 @@ class Command(BaseCommand):
         if time in ('7:00', '7:30', '8:00'):
             day = date.today().isoweekday()
         elif time in ('20:00', '21:00', '22:00', '23:00'):
-            day = date.today()+timedelta(days=1).isoweekday()
+            day = (date.today()+timedelta(days=1)).isoweekday()
         else:
             raise CommandError('wrong notification time')
 
