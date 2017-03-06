@@ -341,7 +341,7 @@ class SettingEveningNotification(_State):
     @classmethod
     def handle(cls, user, user_msg):
         if user_msg.lower() in cls.possible_response:
-            if user_msg.lower() == cls.possible_response[3]:
+            if user_msg.lower() == cls.possible_response[4]:
                 user.change_state(NotificationMenu)
             else:
                 user.notification_time = user_msg
