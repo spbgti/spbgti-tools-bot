@@ -33,5 +33,8 @@ class Command(BaseCommand):
             if message.count('--') == 4:  # no one exercise in the day
                 logger.info("No exercises today for {}".format(user.telegram_id))
             else:
-                bot.sendMessage(chat_id=user.telegram_id, text=message, parse_mode='markdown')
+                try:
+                    bot.sendMessage(chat_id=user.telegram_id, text=message, parse_mode='markdown')
+                except Exception:
+                    logging.error('ERROR')
                 logger.info("Send notification {} to {}".format(time, user.telegram_id))

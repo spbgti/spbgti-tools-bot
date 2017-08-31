@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from spbgtitoolsbot import settings
 from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from .callbacks import callbacks
@@ -56,8 +58,10 @@ class _State:
             reply_markup = None
 
         if msg['type'] == 'text':
-            bot.sendMessage(user.telegram_id, msg['text'], reply_markup=reply_markup)
-
+            try:
+                bot.sendMessage(user.telegram_id, msg['text'], reply_markup=reply_markup)
+            except Exception:
+                logging.error('ERROR')
         return msg
         # реализовать универсальную функцию для отправки сообщений, возможно реализовать объект Message
 
