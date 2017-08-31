@@ -30,13 +30,14 @@ class InlineKeyboardCallback:
         msg_id = (query['message']['chat']['id'], query['message']['message_id'])
         callback_id = query['id']
         group = user.group_number
+        try:
+            message = cls.dispatch(query, group)
 
-        message = cls.dispatch(query, group)
+            keyboard = cls.get_keyboard(query)
 
-        keyboard = cls.get_keyboard(query)
-
-        cls.edit(msg_id, callback_id, message, keyboard)
-
+            cls.edit(msg_id, callback_id, message, keyboard)
+        except Exception:
+            pass
     @classmethod
     def get_keyboard(cls, query):
         """
@@ -62,9 +63,15 @@ class InlineKeyboardCallback:
         try:
             bot.editMessageText(msg_id, text=msg, reply_markup=keyboard, parse_mode='markdown')
         except telepot.exception.TelegramError:
-            bot.answerCallbackQuery(callback_id, text='Уже нажато ;)')
+            try:
+                bot.answerCallbackQuery(callback_id, text='Уже нажато ;)')
+            except telepot.exception.TelegramError:
+                pass
         else:
-            bot.answerCallbackQuery(callback_id)
+            try:
+                bot.answerCallbackQuery(callback_id)
+            except telepot.exception.TelegramError:
+                pass
 
     @classmethod
     def generate_inline_keyboard(cls, keyboard):
