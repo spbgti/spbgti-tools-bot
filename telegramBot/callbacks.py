@@ -1,3 +1,5 @@
+import json
+
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 import telepot
 from spbgtitoolsbot.settings import SCHEDULE_API, TOKEN
@@ -165,10 +167,14 @@ class WeekScheduleCallback(BaseScheduleCallback):
     def generate_message_for_week(cls, group, parity):
         message = 'Четная неделя\n' if parity == '1' else 'Нечетная неделя\n'
         for weekday in range(1, 6):
-            day_schedule = scheduleapi.get_weekday_schedule(group, weekday, parity)
+            try:
+                day_schedule = scheduleapi.get_weekday_schedule(group, weekday, parity)
 
-            message += '\n{}\n'.format(cls.days[weekday - 1])
-            message += cls.generate_day_schedule(day_schedule)
+                message += '\n{}\n'.format(cls.days[weekday - 1])
+                message += cls.generate_day_schedule(day_schedule)
+            except json.decoder.JSONDecodeError:
+                return "Произошла ошибка. Похоже, что я не нашел твоей " \
+                       "группы :(. Возможно чуть позже я смогу тебе помочь"
         return message
 
     @classmethod
