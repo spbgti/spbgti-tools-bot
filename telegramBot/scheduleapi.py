@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 def get_schedule(group):
     return requests.get('{}/schedules/group/{}/year/{}/semester/{}'.format(
-        SCHEDULE_API, group, 2016, 2)).json()['exercises']
+        SCHEDULE_API, group, 2017, 1)).json()['exercises']
 
 
 def get_room(room_id):
