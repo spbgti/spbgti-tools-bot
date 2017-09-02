@@ -33,7 +33,9 @@ def start():
         bot.deleteWebhook()
         bot.message_loop(handle)
     else:
-        bot.setWebhook(url="{}/telegramBot/{}/".format(settings.SERVER_URL, settings.TOKEN))
+        url = "{}/telegramBot/{}/".format(settings.SERVER_URL, settings.TOKEN)
+        if bot.getWebhookInfo()['url'] != url:
+            bot.setWebhook(url=url)
     newlog("Бот запущен")
     return True
 
