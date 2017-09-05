@@ -29,12 +29,13 @@ class Command(BaseCommand):
             logger.info("No exercises today")
             return
         for user in User.objects.filter(notification_time=time):
-            message = DayScheduleCallback.generate_message_for_day(user.group_number, day_date)
+            message = DayScheduleCallback.generate_message_for_day(
+                user.group_number, user, day_date)
             if message.count('--') == 4:  # no one exercise in the day
                 logger.info("No exercises today for {}".format(user.telegram_id))
             else:
                 try:
                     bot.sendMessage(chat_id=user.telegram_id, text=message, parse_mode='markdown')
                 except Exception:
-                    logging.error('ERROR')
+                    logging.exception('ERROR')
                 logger.info("Send notification {} to {}".format(time, user.telegram_id))
