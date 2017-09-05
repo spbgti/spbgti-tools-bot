@@ -1,9 +1,9 @@
 import json
+import logging
 
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 import telepot
-from spbgtitoolsbot.settings import SCHEDULE_API, TOKEN
-import requests
+from spbgtitoolsbot.settings import TOKEN
 from datetime import date, timedelta
 from copy import deepcopy
 from . import scheduleapi
@@ -15,6 +15,7 @@ callbacks = {}
 def callback(cls):
     callbacks[cls.__name__] = cls
     return cls
+
 
 class InlineKeyboardCallback:
     """
@@ -31,13 +32,14 @@ class InlineKeyboardCallback:
         callback_id = query['id']
         group = user.group_number
         try:
-            message = cls.dispatch(query, group)
+            message = cls.dispatch(query, group, user)
 
             keyboard = cls.get_keyboard(query)
 
             cls.edit(msg_id, callback_id, message, keyboard)
         except Exception:
-            pass
+            logging.exception('error')
+
     @classmethod
     def get_keyboard(cls, query):
         """
@@ -49,12 +51,9 @@ class InlineKeyboardCallback:
         raise NotImplementedError()
 
     @classmethod
-    def dispatch(cls, query, group):
+    def dispatch(cls, query, group, user):
         """
         Возвращает сообщение в зависимости от нажатой кнопки
-        :param query:
-        :param group:
-        :return:
         """
         raise NotImplementedError()
 
@@ -90,19 +89,25 @@ class BaseScheduleCallback(InlineKeyboardCallback):
     months = ('января', "февраля", "марта", "апреля", "мая", "июня",
               "июля", "августа", "сентября", "октября", "ноября", "декабря")
     times = ('09:30', '11:15', '13:30', '15:15')
+
     @classmethod
-    def generate_exercise(cls, exercise):
-        return '*{name}* {type} {room}'.format(name=exercise['name'],
-                                             type='(' + exercise['type'] + ')' if exercise['type'] else '',
-                                             room=scheduleapi.get_room(exercise['room_id']))
+    def generate_exercise(cls, exercise, teachers_visible):
+        return '*{name}* {type} {room} `{teachers}`'.format(
+            name=exercise['name'],
+            type='(' + exercise['type'] + ')' if exercise['type'] else '',
+            room=scheduleapi.get_room(exercise['room_id']),
+            teachers=', '.join(exercise['teachers'] if teachers_visible
+                               else [])
+        )
+
     @classmethod
-    def generate_day_schedule(cls, day_schedule: list):
+    def generate_day_schedule(cls, day_schedule: list, teachers_visible):
         f_day_schedule = ''
         for pair in range(1, 5):
             exercise = " -- "
             for ex in day_schedule:
                 if ex['pair'] == str(pair):
-                    exercise = cls.generate_exercise(ex)
+                    exercise = cls.generate_exercise(ex, teachers_visible)
             f_day_schedule += '`{}.` {}\n'.format(cls.times[pair-1], exercise)
         return f_day_schedule
 
@@ -118,17 +123,18 @@ class DayScheduleCallback(BaseScheduleCallback):
         return cls.generate_inline_keyboard(keyboard)
 
     @classmethod
-    def dispatch(cls, query, group):
+    def dispatch(cls, query, group, user):
         day = int(query['data'].split('_')[1])
         if day == 0:
-            return cls.generate_message_for_day(group, date.today())
+            return cls.generate_message_for_day(group, user, date.today())
         elif day == 1:
-            return cls.generate_message_for_day(group, date.today() + timedelta(days=1))
+            return cls.generate_message_for_day(group, user, date.today() +
+                                                timedelta(days=1))
         else:
             return 'error!'
 
     @classmethod
-    def generate_message_for_day(cls, group, day_date):
+    def generate_message_for_day(cls, group, user, day_date):
         schedule, weekday, parity = scheduleapi.get_date_schedule(group, day_date)
         schedule = [exercise for exercise in schedule if
                     exercise['day'] == str(weekday) and
@@ -138,7 +144,7 @@ class DayScheduleCallback(BaseScheduleCallback):
                                               cls.months[day_date.month-1],
                                               "четн" if parity == 1 else 'нечетн')
 
-        message += cls.generate_day_schedule(schedule)
+        message += cls.generate_day_schedule(schedule, user.teachers_visible)
         return message
 
     @classmethod
@@ -161,24 +167,24 @@ class WeekScheduleCallback(BaseScheduleCallback):
         return cls.generate_inline_keyboard(keyboard)
 
     @classmethod
-    def dispatch(cls, query, group):
+    def dispatch(cls, query, group, user):
         week = int(query['data'].split('_')[1])
         if week == 0:
-            return cls.generate_message_for_week(group, parity='1')
+            return cls.generate_message_for_week(group, user, parity='1')
         elif week == 1:
-            return cls.generate_message_for_week(group, parity='2')
+            return cls.generate_message_for_week(group, user, parity='2')
         else:
             return 'error!'
 
     @classmethod
-    def generate_message_for_week(cls, group, parity):
+    def generate_message_for_week(cls, group, user, parity):
         message = 'Четная неделя\n' if parity == '1' else 'Нечетная неделя\n'
         for weekday in range(1, 6):
             try:
                 day_schedule = scheduleapi.get_weekday_schedule(group, weekday, parity)
 
                 message += '\n{}\n'.format(cls.days[weekday - 1])
-                message += cls.generate_day_schedule(day_schedule)
+                message += cls.generate_day_schedule(day_schedule, user.teachers_visible)
             except json.decoder.JSONDecodeError:
                 return "Произошла ошибка. Похоже, что я не нашел твоей " \
                        "группы :(. Возможно чуть позже я смогу тебе помочь"
@@ -206,7 +212,7 @@ class AllScheduleCallback(BaseScheduleCallback):
     ]
 
     @classmethod
-    def dispatch(cls, query, group):
+    def dispatch(cls, query, group, user):
         button, first_row, second_row,  = map(int, query['data'].split('_')[1:])
         if 0 <= button <= 1:  # выбор четности
             parity = button + 1
@@ -214,15 +220,15 @@ class AllScheduleCallback(BaseScheduleCallback):
         else:  # выбор дня недели
             parity = first_row + 1
             weekday = button - 1
-        return cls.generate_message(group, parity, weekday)
+        return cls.generate_message(group, user, parity, weekday)
 
     @classmethod
-    def generate_message(cls, group, parity, weekday):
+    def generate_message(cls, group, user, parity, weekday):
         schedule = scheduleapi.get_weekday_schedule(group, weekday, parity)
         message = '{}, _({})_\n'.format(cls.days[weekday - 1],
                                       "четн" if parity == 1 else 'нечетн')
 
-        message += cls.generate_day_schedule(schedule)
+        message += cls.generate_day_schedule(schedule, user.teachers_visible)
         return message
 
     @classmethod

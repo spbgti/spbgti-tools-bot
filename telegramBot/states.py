@@ -262,21 +262,44 @@ class Settings(_State):
         {
             'type': 'text',
             'text': 'Настройки',
-            'custom_keyboard': [["Группа"],
+            'custom_keyboard': [["Группа", "Преподаватели"],
                                 ["Назад"]],
         },
     ]
-    possible_response = ["группа", "назад"]
+    possible_response = ["группа", "преподаватели", "назад"]
 
     @classmethod
     def handle(cls, user, user_msg):
         if user_msg.lower() == cls.possible_response[0]:
             user.change_state(SettingGroup)
         elif user_msg.lower() == cls.possible_response[1]:
+            user.change_state(ChangeTeachersVisible)
+        elif user_msg.lower() == cls.possible_response[2]:
             user.change_state(Menu)
         else:
             cls.reset(user)
 
+
+@state
+class ChangeTeachersVisible(_State):
+    start_messages = [
+        {
+            'type': 'text',
+            'text': ''
+        }
+    ]
+
+    @classmethod
+    def set(cls, user):
+        user.teachers_visible = not user.teachers_visible
+        user.save()
+        text = 'Имена преподавателей теперь показываются' if \
+            user.teachers_visible else  \
+            'Имена преподавателей теперь не показываются'
+        message = cls.start_messages[0]
+        message['text'] = text
+        cls.send_message(message, user)
+        user.change_state(Settings)
 
 @state
 class NotificationMenu(_State):
