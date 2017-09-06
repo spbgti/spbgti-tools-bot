@@ -51,7 +51,7 @@ class _State:
         if 'custom_keyboard' in msg:
             reply_markup = ReplyKeyboardMarkup(
                 keyboard=[list(map(lambda x: KeyboardButton(text=x), i)) for i in msg['custom_keyboard']],
-                resize_keyboard=True, one_time_keyboard=True)
+                resize_keyboard=True)
         elif 'inline_keyboard' in msg:
             reply_markup = msg['inline_keyboard']
         else:
