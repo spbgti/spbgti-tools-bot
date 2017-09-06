@@ -1,5 +1,9 @@
+from json import JSONDecodeError
+
 from django.core.management.base import BaseCommand, CommandError
 from telepot import Bot
+from telepot.exception import TelegramError
+
 from spbgtitoolsbot.settings import TOKEN
 from telegramBot.models import User
 from telegramBot.callbacks import DayScheduleCallback
@@ -29,13 +33,28 @@ class Command(BaseCommand):
             logger.info("No exercises today")
             return
         for user in User.objects.filter(notification_time=time):
-            message = DayScheduleCallback.generate_message_for_day(
+            try:
+                message = DayScheduleCallback.generate_message_for_day(
                 user.group_number, user, day_date)
+            except JSONDecodeError:
+                logger.info("User with invalid group number. User "
+                            "delete".format(user.telegram_id))
+                user.delete()
+                continue
+
             if message.count('--') == 4:  # no one exercise in the day
                 logger.info("No exercises today for {}".format(user.telegram_id))
+
             else:
                 try:
                     bot.sendMessage(chat_id=user.telegram_id, text=message, parse_mode='markdown')
+                except TelegramError:
+                    logger.info("Bot is blocked for {}. User delete".format(
+                        user.telegram_id))
+                    user.delete()
+                    continue
                 except Exception:
                     logging.exception('ERROR')
-                logger.info("Send notification {} to {}".format(time, user.telegram_id))
+                else:
+                    logger.info("Send notification {} to {}".format(time,
+                                                                 user.telegram_id))
