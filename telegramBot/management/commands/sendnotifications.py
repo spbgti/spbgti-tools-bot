@@ -1,4 +1,5 @@
 from json import JSONDecodeError
+from time import sleep
 
 from django.core.management.base import BaseCommand, CommandError
 from telepot import Bot
@@ -48,6 +49,7 @@ class Command(BaseCommand):
             else:
                 try:
                     bot.sendMessage(chat_id=user.telegram_id, text=message, parse_mode='markdown')
+                    sleep(1)
                 except TelegramError:
                     logger.info("Bot is blocked for {}. User delete".format(
                         user.telegram_id))
