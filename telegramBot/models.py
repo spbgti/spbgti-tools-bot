@@ -6,10 +6,12 @@ from .states import states
 
 
 class User(models.Model):
-    telegram_id = models.CharField("Id аккаунта телеграм", max_length=12, unique=True, primary_key=True)
+    telegram_id = models.CharField("Id аккаунта телеграм", max_length=15,
+                                   unique=True, primary_key=True)
     state = models.CharField("Состояние", default="", max_length=150)
     is_student = models.BooleanField("Учащийся", blank=True, default=False)
-    group_number = models.CharField("Номер группы", max_length=11, blank=True, null=True)
+    group_number = models.CharField("Номер группы", max_length=15,
+                                    blank=True, null=True)
     notification_time = models.CharField("Время уведомления", max_length=10, blank=True, null=True)
     teachers_visible = models.BooleanField("Видимость имен преподавателей",
                                            default=True)
