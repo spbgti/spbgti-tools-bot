@@ -3,5 +3,5 @@ Django==1.10.5
 gunicorn==19.4.5
 psycopg2
 whitenoise==3.2
-telepot==10.4
+telepot==12.3
 requests
