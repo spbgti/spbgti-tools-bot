@@ -1,6 +1,6 @@
 dj-database-url==0.4.0
 Django==1.10.5
-gunicorn==19.4.5
+gunicorn==19.5.0
 psycopg2
 whitenoise==3.2
 telepot==12.3
